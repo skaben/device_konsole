@@ -5,7 +5,7 @@ trap "exit" INT
 
 help () 
 {
-  echo "Usage: pre-run.sh [install|reset]"
+  echo "Usage: pre-run.sh [install|reset|manual]"
   exit
 }
 
@@ -13,18 +13,21 @@ if [[ -z $1 ]]; then
   help
 fi
 
-# systemd
-
-check_uname () {
-  if ! [ "$(grep -Ei 'debian|buntu|mint' /etc/*release)" ]; then
-    echo -e " > Sorry, only Debian-based distros supported for auto-deploy\n"\
-    "> manual process:\n"\
+manual () {
+  echo -e "> manual process:\n"\
     "   python3.7 python3.7-venv should be installed\n"\
     "   python3.7 -m venv venv\n"\
     "   source ./venv/bin/activate\n"\
     "   pip install --upgrade pip\n"\
     "   pip install -r requirements.txt\n"\
     "   ./deploy.sh reset\n"
+  exit
+}
+
+check_uname () {
+  if ! [ "$(grep -Ei 'debian|buntu|mint' /etc/*release)" ]; then
+    echo -e " > Sorry, only Debian-based distros supported for auto-deploy\n"
+    manual
     exit
   fi
 }
@@ -90,9 +93,10 @@ if [ "$1" = 'install' ]; then
   check_uname
   deploy
   reset 
-  service
 elif [ "$1" = 'reset' ]; then
-  reset 
+  reset
+elif [ "$1" = 'manual' ]; then
+  manual
 else
   help
 fi
