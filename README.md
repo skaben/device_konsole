@@ -20,10 +20,31 @@
 - системный конфиг генерируется из `system_config.yml.template`, в процессе работы приложения не изменяется, хранится в `conf/system.yml`.
 - конфиг устройства (приложения) изменяется в ходе работы, при первом запуске минимальный конфиг, описанный в `config.ESSENTIAL` будет записан в файл `conf/device.yml`
 
-### пример
+## примеры
 
 скажем, для устройства `Door`, имеющего параметр `closed`:
 
+##### templates
+
+правим темплейт в `templates/system_config.yml.template`
+```
+dev_type: <name>  # это определяет канал, который будет слушать устройство name/MAC-address
+broker_ip: <broker ip address>
+username: <optional mqtt username>
+password: <optional mqtt password>
+iface: ${iface}  # определит внешний интерфейс автоматически в процессе работы ./pre-run.sh
+```
+запускаем `./pre-run.sh`
+
+##### config.py
+
+здесь должны быть значения по умолчанию, без которых устройство не сможет запуститься.
+
+```
+ESSENTIAL = {
+    "key": 'val'
+}
+```
 
 ##### device.py
 
