@@ -32,6 +32,22 @@ check_uname () {
   fi
 }
 
+delete_if_exists () 
+{
+  if [ -d $1 ]; then
+    rm -rf $1
+  fi
+
+}
+
+unpack_resources ()
+{
+  delete_if_exists "resources"	
+  if [ -f "./resources.tar.gz" ]; then
+    tar xvzf resources.tar.gz
+  fi
+}
+
 # deploy
 
 deploy () {
@@ -54,18 +70,13 @@ deploy () {
   sudo apt-get install -y --no-install-recommends $PYTHON $PYTHON_VENV $PYTHON_DEV
 
   echo -e "> setting up virtual environment"
-
-  if  [ -d "./venv" ]; then 
-    rm -rf "venv"
-  fi
+  delete_if_exists "venv"
   $PYTHON -m venv venv
   source "./venv/bin/activate"
   pip install --upgrade pip
   pip install -r requirements.txt --no-cache-dir
 
-  if [ -d "conf" ]; then
-    rm -rf "conf"
-  fi
+  delete_if_exists "conf"
   mkdir conf
 
   echo -e "... done!\n"
@@ -82,6 +93,7 @@ reset ()
   sed -e "s/\${iface}/'$iface'/" \
       -e "s+\${dirpath}+$local_path+" "templates/system_config.yml.template" > "./conf/system.yml"
   touch "./conf/device.yml"  # create empty device config
+  unpack_resources
   echo "[>] done!"
 }
 
@@ -90,7 +102,7 @@ reset ()
 if [ "$1" = 'install' ]; then
   check_uname
   deploy
-  reset 
+  reset
 elif [ "$1" = 'reset' ]; then
   reset
 elif [ "$1" = 'manual' ]; then
