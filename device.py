@@ -37,5 +37,7 @@ class KonsoleDevice(BaseDevice):
                 window = webview.create_window('My first pywebview application',
                                                flask_app)
                 webview.start(debug=True)
+                while self.running:
+                    time.sleep(1)
         except Exception:
             raise
