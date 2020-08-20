@@ -9,6 +9,7 @@ from werkzeug.wrappers import BaseResponse as Response
 import webview
 from . import webapi
 
+webview.gui = 'gtk'
 
 static_dir = os.path.join(os.path.dirname(__file__), 'static')
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')

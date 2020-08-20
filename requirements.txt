@@ -3,7 +3,7 @@
 
 flake8
 flask
-pywebview
+pywebview[gtk]
 pygame>=1.9.4
 pyaml==18.11.0
 python-dotenv

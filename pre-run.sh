@@ -67,7 +67,7 @@ deploy () {
   fi
 
   echo -e "> installing dependencies with apt"
-  sudo apt-get install -y --no-install-recommends $PYTHON $PYTHON_VENV $PYTHON_DEV
+  sudo apt-get install -y --no-install-recommends "$PYTHON $PYTHON_VENV $PYTHON_DEV python3-gi python3-gi-cairo gir1.2-gtk-3.0 build-essential libcairo2-dev libgirepository1.0-dev zlib1g-dev zlib1g libbz2 libbz2-dev"
 
   echo -e "> setting up virtual environment"
   delete_if_exists "venv"
