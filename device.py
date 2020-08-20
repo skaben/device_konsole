@@ -34,10 +34,11 @@ class KonsoleDevice(BaseDevice):
         stream = StringIO()
         try:
             with redirect_stdout(stream):
-                window = webview.create_window('My first pywebview application',
-                                               flask_app)
+                window = webview.create_window('TERMINAL',
+                                               flask_app,
+                                               )
                 webview.start(debug=True)
                 while self.running:
-                    time.sleep(1)
+                    time.sleep(100)
         except Exception:
             raise
