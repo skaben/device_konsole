@@ -1,8 +1,12 @@
 import os
 import time
+import webview
 
 from skabenclient.device import BaseDevice
 from config import BoilerplateConfig
+from web.app import app as flask_app
+from contextlib import redirect_stdout
+from io import StringIO
 
 
 class BoilerplateDevice(BaseDevice):
@@ -27,6 +31,11 @@ class BoilerplateDevice(BaseDevice):
         """
         super().run()
         self.running = True
-        while self.running:
-            # main routine
-            time.sleep(100)
+        stream = StringIO()
+        try:
+            with redirect_stdout(stream):
+                window = webview.create_window('My first pywebview application',
+                                               flask_app)
+                webview.start(debug=True)
+        except Exception:
+            raise
