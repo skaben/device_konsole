@@ -3,6 +3,7 @@
 
 flake8
 flask
+wheel
 pywebview[gtk]
 pygame>=1.9.4
 pyaml==18.11.0
