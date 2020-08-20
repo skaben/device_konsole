@@ -7,7 +7,7 @@ ESSENTIAL = {
         'minimal': 'boilerplate'        
 }
 
-class BoilerplateConfig(DeviceConfig):
+class KonsoleConfig(DeviceConfig):
 
     def __init__(self, config):
         self.minimal_essential_conf = ESSENTIAL

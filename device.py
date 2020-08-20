@@ -3,13 +3,13 @@ import time
 import webview
 
 from skabenclient.device import BaseDevice
-from config import BoilerplateConfig
+from config import KonsoleConfig
 from web.app import app as flask_app
 from contextlib import redirect_stdout
 from io import StringIO
 
 
-class BoilerplateDevice(BaseDevice):
+class KonsoleDevice(BaseDevice):
 
     """ Test device should be able to generate all kind of messages
 
@@ -18,7 +18,7 @@ class BoilerplateDevice(BaseDevice):
         send_message(data) -> отправить сообщение от имени девайса во внутреннюю очередь
     """
 
-    config_class = BoilerplateConfig
+    config_class = KonsoleConfig
 
     def __init__(self, system_config, device_config, **kwargs):
         super().__init__(system_config, device_config)
