@@ -11,13 +11,21 @@
     <!--[if lt IE 7]>
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
+
     <div class="app">
-      <h5>KONSOLE</h5>
+      <div class="app__effects"></div>
+      <div class="app__screen"></div>
+      <div class="app__content"></div>
     </div>
+
     <script>
-      document.body.addEventListener('contextmenu', function(ev) {
-        ev.preventDefault();
+
+      // disable context menu
+      document.body.addEventListener('contextmenu', function(_event) {
+        _event.preventDefault();
       }, false);      
+
     </script>
+
   </body>
 </html>

@@ -1,21 +1,28 @@
 {
   "name": "device_konsole",
   "version": "1.0.0",
-  "description": "device konsole npm build",
+  "description": "device konsole front",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --mode production",
     "start:dev": "webpack-dev-server"
   },
   "author": "Zerth Monk",
   "license": "MIT",
-  "dependencies": {
-    "bulma": "^0.9.0",
-    "node-sass": "^4.14.1",
-    "pug": "^3.0.0",
-    "webpack": "^4.44.1"
-  },
   "devDependencies": {
+    "bulma": "^0.9.0",
+    "clean-webpack-plugin": "^3.0.0",
+    "css-loader": "^4.2.1",
+    "extract-text-webpack-plugin": "^4.0.0-beta.0",
+    "file-loader": "^6.0.0",
+    "html-webpack-plugin": "^4.3.0",
+    "mini-css-extract-plugin": "^0.10.0",
+    "node-sass": "^4.14.1",
+    "sass-loader": "^9.0.3",
+    "style-loader": "^1.2.1",
+    "ttf-loader": "^1.0.2",
+    "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0"
   }

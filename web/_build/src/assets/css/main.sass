@@ -1,0 +1,33 @@
+// todo: move all font-family to scss because of multiline support  
+// https://www.fontsquirrel.com/tools/webfont-generator
+//@font-face
+//  font-family: 'konsole'
+//  src: url('./fonts/glass_tty_vt220-webfont.woff2') format('woff2'), url('./fonts/glass_tty_vt220-webfont.woff') format('woff')
+//  font-weight: normal
+//  font-style: normal
+
+@font-face
+  font-family: 'konsole'
+  src: url('./fonts/Glass_TTY_VT220.ttf') format('truetype')
+  font-weight: normal
+  font-style: normal
+  font-display: swap
+
+
+.app
+  color: lightgreen
+  height: 100vh
+  width: 100%
+  font-family: 'konsole'
+  font-size: 20px
+  background: black
+  padding: 2rem
+
+
+.omnissiah
+  height: 25vh
+  width: 25vh
+  margin: auto
+  background: url('./img/omnissiah.jpg')
+  background-position: center
+  background-size: contain

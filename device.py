@@ -36,7 +36,7 @@ class KonsoleDevice(BaseDevice):
             with redirect_stdout(stream):
                 window = webview.create_window('TERMINAL',
                                                flask_app,
-                                               )
+                                               fullscreen=True)
                 webview.start(debug=True)
                 while self.running:
                     time.sleep(100)
