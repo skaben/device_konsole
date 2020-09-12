@@ -3,7 +3,7 @@ import os
 import webbrowser
 from functools import wraps
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_from_directory
 from werkzeug.wrappers import BaseResponse as Response
 
 import webview
@@ -11,16 +11,33 @@ from . import webapi
 
 webview.gui = 'gtk'
 
-static_dir = os.path.join(os.path.dirname(__file__), 'static')
-template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-
-for _dir in (static_dir, template_dir):
-    if not os.path.exists(_dir):
-        raise FileNotFoundError(f'missing directory: {_dir}')
+template_dir = os.path.join(os.path.dirname(__file__), 'dist')
+static_dir = os.path.join(os.path.dirname(__file__), 'dist')
 
 
-app = Flask(__name__, static_folder=static_dir, template_folder=template_dir)
+
+app = Flask(__name__,
+            static_url_path='',
+            template_folder=template_dir)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 1  # disable caching
+
+
+@app.route('/js/<path:path>')
+def send_js(path):
+    js_dir = os.path.join(static_dir, 'js')
+    return send_from_directory(js_dir, path)
+
+
+@app.route('/css/<path:path>')
+def send_css(path):
+    css_dir = os.path.join(static_dir, 'css')
+    return send_from_directory(css_dir, path)
+
+
+@app.route('/fonts/<path:path>')
+def send_fonts(path):
+    font_dir = os.path.join(static_dir, 'fonts')
+    return send_from_directory(font_dir, path)
 
 
 def verify_token(function):

@@ -25,10 +25,7 @@ class KonsoleDevice(BaseDevice):
         self.running = None
 
     def run(self):
-        """ Main device run routine
-
-            в супере он создает сообщение во внутренней очереди что девайс запущен.
-        """
+        """ Main device run routine """
         super().run()
         self.running = True
         stream = StringIO()
@@ -36,9 +33,9 @@ class KonsoleDevice(BaseDevice):
             with redirect_stdout(stream):
                 window = webview.create_window('TERMINAL',
                                                flask_app,
-                                               )
-                webview.start(debug=True)
+                                               fullscreen=False)
+                webview.start(debug=False)
                 while self.running:
-                    time.sleep(100)
+                    time.sleep(1)
         except Exception:
             raise
