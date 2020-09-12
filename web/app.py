@@ -11,8 +11,8 @@ from . import webapi
 
 webview.gui = 'gtk'
 
-template_dir = os.path.join(os.path.dirname(__file__), 'dist')
-static_dir = os.path.join(os.path.dirname(__file__), 'dist')
+template_dir = os.path.join(os.path.dirname(__file__), 'static')
+static_dir = os.path.join(os.path.dirname(__file__), 'static')
 
 
 
