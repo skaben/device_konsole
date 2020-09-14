@@ -13,6 +13,9 @@ if [[ -z $1 ]]; then
   help
 fi
 
+
+SYS_REQUIREMENTS='python3-gi python3-gi-cairo gir1.2-gtk-3.0 build-essential pkg-config libcairo2 libcairo2-dev libgirepository1.0-dev zlib1g-dev zlib1g libbz2 libbz2-dev'
+
 manual () {
   echo -e "> manual deploy process:\n"\
     "   python3.7 python3.7-venv should be installed\n"\
@@ -67,7 +70,7 @@ deploy () {
   fi
 
   echo -e "> installing dependencies with apt"
-  sudo apt-get install -y --no-install-recommends $PYTHON $PYTHON_VENV $PYTHON_DEV python3-gi python3-gi-cairo gir1.2-gtk-3.0 build-essential libcairo2-dev libgirepository1.0-dev zlib1g-dev zlib1g libbz2 libbz2-dev
+  sudo apt-get install -y --no-install-recommends $PYTHON $PYTHON_VENV $PYTHON_DEV $SYS_REQUIREMENTS
 
   echo -e "> setting up virtual environment"
   delete_if_exists "venv"
