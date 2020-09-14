@@ -14,7 +14,7 @@ if [[ -z $1 ]]; then
 fi
 
 
-SYS_REQUIREMENTS='python3-gi python3-gi-cairo gir1.2-gtk-3.0 build-essential pkg-config libcairo2 libcairo2-dev libgirepository1.0-dev zlib1g-dev zlib1g libbz2 libbz2-dev'
+SYS_REQUIREMENTS='python3-gi python3-gi-cairo gir1.2-gtk-3.0 build-essential pkg-config libcairo2 libcairo2-dev libgirepository1.0-dev zlib1g-dev zlib1g bzip2'
 
 manual () {
   echo -e "> manual deploy process:\n"\

@@ -15,10 +15,10 @@ template_dir = os.path.join(os.path.dirname(__file__), 'static')
 static_dir = os.path.join(os.path.dirname(__file__), 'static')
 
 
-
 app = Flask(__name__,
             static_url_path='',
             template_folder=template_dir)
+
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 1  # disable caching
 
 
@@ -80,10 +80,3 @@ def initialize():
         return Response('ok', status=200)
     else:
         return Response('error', status=500)
-
-
-@app.route('/fullscreen', methods=['POST'])
-@verify_token
-def fullscreen():
-    webview.windows[0].toggle_fullscreen()
-    return Response('', status=200)
