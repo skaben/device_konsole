@@ -40,6 +40,12 @@ def send_fonts(path):
     return send_from_directory(font_dir, path)
 
 
+@app.route('/sounds/<path:path>')
+def send_sounds(path):
+    font_dir = os.path.join(static_dir, 'sounds')
+    return send_from_directory(font_dir, path)
+
+
 def verify_token(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
@@ -58,13 +64,25 @@ def add_header(response):
     response.headers['Cache-Control'] = 'no-store'
     return response
 
-
-@app.route('/')
-def root():
-    """
-    Render index.html. Initialization is performed asynchronously in initialize() function
-    """
+def get_index():
     return render_template('index.html', token=webview.token)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return get_index()
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def catch_all(path):
+    """ catch all for serving JS CSR """
+    return get_index()
+#
+#@app.route('/')
+#def root():
+#    """
+#    Render index.html. Initialization is performed asynchronously in initialize() function
+#    """
+#    return render_template('index.html', token=webview.token)
 
 
 @app.route('/init', methods=['POST'])
