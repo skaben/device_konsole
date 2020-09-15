@@ -8,6 +8,8 @@ from web.app import app as flask_app
 from contextlib import redirect_stdout
 from io import StringIO
 
+GUI = 'qt'
+
 
 class KonsoleDevice(BaseDevice):
 
@@ -31,11 +33,15 @@ class KonsoleDevice(BaseDevice):
         stream = StringIO()
         try:
             with redirect_stdout(stream):
+                # fixme: qt autoplay
+                # browser = QWebEngineView()
+                # browser.page().settings().setAttribute(
+                #         QWebEngineSettings.PlaybackRequiresUserGesture, False)
+
                 window = webview.create_window('TERMINAL',
                                                flask_app,
-                                               fullscreen=True)
-                webview.start(debug=True)
-                while self.running:
-                    time.sleep(1)
+                                               fullscreen=False)
+                webview.start(gui=GUI,
+                              debug=True)
         except Exception:
             raise

@@ -3,13 +3,11 @@ import os
 import webbrowser
 from functools import wraps
 
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, render_template, request, send_from_directory, jsonify
 from werkzeug.wrappers import BaseResponse as Response
 
 import webview
 from . import webapi
-
-webview.gui = 'gtk'
 
 template_dir = os.path.join(os.path.dirname(__file__), 'static')
 static_dir = os.path.join(os.path.dirname(__file__), 'static')
@@ -45,6 +43,12 @@ def send_sounds(path):
     font_dir = os.path.join(static_dir, 'sounds')
     return send_from_directory(font_dir, path)
 
+@app.route("/api", methods=["POST"])
+def api():
+    data = json.loads(request.data)
+    if data.get("event"):
+        print("WHEEEEEEEEE")
+        return jsonify({"message": "wheeee"})
 
 def verify_token(function):
     @wraps(function)
@@ -98,3 +102,4 @@ def initialize():
         return Response('ok', status=200)
     else:
         return Response('error', status=500)
+
