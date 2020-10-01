@@ -31,6 +31,7 @@ class KonsoleDevice(BaseDevice):
         super().run()
         self.running = True
         stream = StringIO()
+        return flask_app.run(host="0.0.0.0", debug=True)
         try:
             with redirect_stdout(stream):
                 # fixme: qt autoplay
@@ -40,7 +41,10 @@ class KonsoleDevice(BaseDevice):
 
                 window = webview.create_window('TERMINAL',
                                                flask_app,
-                                               fullscreen=False)
+                                               fullscreen=False,
+                                               width=1024,
+                                               height=780
+                                               )
                 webview.start(gui=GUI,
                               debug=True)
         except Exception:

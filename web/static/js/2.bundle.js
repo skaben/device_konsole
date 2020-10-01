@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[2],{27:function(n,s,e){"use strict";e.r(s),s.default=e.p+"sounds/screen_change.mp3"}}]);

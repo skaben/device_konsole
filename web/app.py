@@ -1,10 +1,11 @@
 import json
 import os
-import webbrowser
+import logging
 from functools import wraps
 
 from flask import Flask, render_template, request, send_from_directory, jsonify
 from werkzeug.wrappers import BaseResponse as Response
+from flask_cors import CORS, cross_origin
 
 import webview
 from . import webapi
@@ -12,12 +13,16 @@ from . import webapi
 template_dir = os.path.join(os.path.dirname(__file__), 'static')
 static_dir = os.path.join(os.path.dirname(__file__), 'static')
 
-
 app = Flask(__name__,
             static_url_path='',
             template_folder=template_dir)
 
+CORS(app, resources={r"*": {"origins": "*"}})
+
+app.config['CORS_HEADERS'] = ['Content-Type', 'application/json']
+app.config['CORS_ORIGINS'] = ["*", 'http://localhost:9000', "http://127.0.0.1:9000"]
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 1  # disable caching
+
 
 
 @app.route('/js/<path:path>')
@@ -43,12 +48,51 @@ def send_sounds(path):
     font_dir = os.path.join(static_dir, 'sounds')
     return send_from_directory(font_dir, path)
 
+
+@app.route("/api/hack")
+def dict():
+    data = {
+        "words": ['AARDVARK', "TESTWORD", "WORDTEST", "VAARDARK", "TESTTEST", "WORDWORD", "ESTESTTT"],
+        "password": "WARKWARK",
+        "tries": 4,
+        "timeout": 0,
+        "cheatChance": 20,
+        "cheatRemove": 10,
+        "cheatRestore": 50,
+        "text_header": 'text in header',
+        "text_footer": 'text in footer'
+    }
+    return jsonify(data)
+
+
+@app.route("/api/menu")
+def menu():
+    data = [
+        ["hack", "gain access"],
+        ["menu", "main menu"],
+        ["main", "show loading screen"]
+    ]
+    return jsonify(data)
+
+@app.route("/api/device")
+def device():
+    data = {
+        "blocked": False,
+        "online": True,
+        "powered": True,
+        "sound": True,
+        "header": "terminal konsole flask test",
+        "footer": "terminal footer"
+    }
+    return jsonify(data)
+
+
 @app.route("/api", methods=["POST"])
 def api():
     data = json.loads(request.data)
     if data.get("event"):
-        print("WHEEEEEEEEE")
         return jsonify({"message": "wheeee"})
+
 
 def verify_token(function):
     @wraps(function)
