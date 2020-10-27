@@ -10,7 +10,7 @@ def index():
 def gamedata():
     data = {
         "words": ['AARDVARK', "TESTWORD", "WORDTEST", "VAARDARK", "TESTTEST", "WORDWORD", "ESTESTTT"],
-        "password": "WARKWARK",
+        "password": "PASSWORD",
         "tries": 4,
         "timeout": 0,
         "cheatChance": 20,

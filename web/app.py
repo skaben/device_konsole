@@ -1,7 +1,6 @@
 import os
 
 from flask import Flask, render_template, request, send_from_directory, jsonify
-from flask_socketio import SocketIO
 from flask_cors import CORS, cross_origin
 
 from . import views
@@ -19,7 +18,6 @@ CORS(app, supports_credentials=True)
 app.config['CORS_HEADERS'] = ['Content-Type', 'application/json']
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 1  # disable caching
 
-socketio = SocketIO(app, path="/ws")
 
 # URLs
 
@@ -46,7 +44,3 @@ def page_not_found(e):
 def catch_all(path):
     """ catch all for serving JS CSR """
     return views.index()
-
-
-def run_flask_app():
-    return socketio.run(app)

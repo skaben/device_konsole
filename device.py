@@ -1,14 +1,13 @@
-import os
-import sys
-import time
 import webview
 import threading
 
-from skabenclient.device import BaseDevice
-from config import KonsoleConfig
-from web.app import run_flask_app
-from contextlib import redirect_stdout
 from io import StringIO
+from contextlib import redirect_stdout
+from flask_socketio import SocketIO
+
+from skabenclient.device import BaseDevice
+from web.app import app as flask_app
+from config import KonsoleConfig
 
 
 class KonsoleDevice(BaseDevice):
@@ -20,22 +19,33 @@ class KonsoleDevice(BaseDevice):
         send_message(data) -> отправить сообщение от имени девайса во внутреннюю очередь
     """
 
-    config_class = KonsoleConfig
     GUI = 'qt'  # qt or gtk
+    # TODO: move to config
+    host = "http://127.0.0.1:5000/"
+    ws_path = "ws"
+    config_class = KonsoleConfig
 
-    def __init__(self, system_config, device_config, **kwargs):
+    def __init__(self, system_config, device_config):
         super().__init__(system_config, device_config)
         self.running = None
+        self.socketio = SocketIO(flask_app, path=self.ws_path)
+        self.socketio.on_event("testws", self.testws)
 
-    @staticmethod
-    def start_webserver():
-        ft = threading.Thread(target=run_flask_app,
+    def testws(self):
+        self.logger.info("IT WORKS")
+
+    def start_webserver(self):
+
+        def flask_io():
+            return self.socketio.run(flask_app)
+
+        ft = threading.Thread(target=flask_io,
                               daemon=True)
         ft.start()
 
     def start_webclient(self):
         webview.create_window('TERMINAL',
-                              "http://127.0.0.1:5000/",
+                              self.host,
                               fullscreen=False,
                               width=1024,
                               height=780
