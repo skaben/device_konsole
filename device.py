@@ -3,6 +3,7 @@ import threading
 
 from io import StringIO
 from contextlib import redirect_stdout
+from flask import jsonify
 from flask_socketio import SocketIO
 
 from skabenclient.device import BaseDevice
@@ -25,16 +26,49 @@ class KonsoleDevice(BaseDevice):
     ws_path = "ws"
     config_class = KonsoleConfig
 
+    pages = {
+        "main": "main",
+        "menu": "menu",
+        "hack": "hack"
+    }
+
+    cmd_test = "cmd_test"
+    cmd_switch = "cmd_switch"
+    cmd_send = "cmd_send"
+
     def __init__(self, system_config, device_config):
         super().__init__(system_config, device_config)
         self.running = None
         self.socketio = SocketIO(flask_app, path=self.ws_path)
+        # events from frontend
+        self.socketio.on_event("gamewin", self.game_win)
+        self.socketio.on_event("gamelose", self.game_lose)
+        self.socketio.on_event("fetch", self.api_data)
         self.socketio.on_event("testws", self.testws)
 
     def testws(self):
-        self.logger.info("IT WORKS")
+        self.logger.info('receive test, reply with full config')
+        self.socketio.emit(self.cmd_test, self.config.data)
+
+    def game_win(self):
+        self.logger.info("[!] terminal game solved")
+        self.state_update({"hacked": True})
+        self.socketio.emit(self.cmd_switch, {"data": self.pages["menu"]})
+        self.logger.debug(self.config.data)
+
+    def game_lose(self):
+        self.logger.info("[!] terminal game solved")
+        self.state_update({"blocked": True})
+        self.socketio.emit(self.cmd_switch, {"data": self.pages["main"]})
+        self.logger.debug(self.config.data)
+
+    def api_data(self):
+        self.state_reload()
+        self.socketio.emit(self.cmd_send, {"data": self.config.data})
 
     def start_webserver(self):
+
+        flask_app.add_url_rule('/api/data', view_func=self.api_data)
 
         def flask_io():
             return self.socketio.run(flask_app)

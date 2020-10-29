@@ -6,7 +6,7 @@ conf/*
 .idea/
 node_modules/
 package-lock.json
-web/static/
+web/static/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
