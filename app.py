@@ -1,12 +1,7 @@
 import os
-import sys
-import json
 
 from skabenclient.config import SystemConfig
-from skabenclient.helpers import get_mac
 from skabenclient.main import start_app
-
-from dotenv import load_dotenv
 
 from device import KonsoleDevice
 from config import KonsoleConfig
@@ -24,13 +19,12 @@ if __name__ == "__main__":
     # DO NOT FORGET TO RUN ./pre-run.sh install BEFORE FIRST START
     #
 
-    # setting system configuration and logger
+    # setting core config
     app_config = SystemConfig(sys_config_path, root=root)
     app_config.logger(file_path=log_path)
-    # inject arguments into system configuration
-    dev_config = KonsoleConfig(dev_config_path)
-    # instantiating device
+    # setting initial device config
+    dev_config = KonsoleConfig(dev_config_path, app_config)
+
     device = KonsoleDevice(app_config, dev_config)
-    # start application
     start_app(app_config=app_config,
               device=device)

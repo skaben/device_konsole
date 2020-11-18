@@ -64,7 +64,7 @@ class KonsoleDevice(BaseDevice):
 
     def api_data(self):
         self.state_reload()
-        self.socketio.emit(self.cmd_send, {"data": self.config.data})
+        return jsonify(self.config.data)
 
     def start_webserver(self):
 
