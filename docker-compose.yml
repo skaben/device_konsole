@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+  skabenkonsole:
+    build:
+      context: .
+    volumes:
+      - ./conf:/app/conf
+      - ./tests:/app/tests
+      - ./app.py:/app/app.py
+      - ./config.py:/app/config.py
+      - ./device.py:/app/device.py
+      - ./local.log:/app/local.log
+    command: >
+       sh -c "pytest /app/ && \
+              flake8 /app/"

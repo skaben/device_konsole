@@ -9,13 +9,12 @@ from skabenclient.loaders import HTTPLoader
 # сомнительное решение, надо бы это переписать потом.
 
 ESSENTIAL = {
-    'minimal': 'boilerplate'
+    "assets": {}
 }
 
 
 class KonsoleConfig(DeviceConfigExtended):
 
-    assets = {}
     asset_dirs = ['image',
                   'audio',
                   'video',
