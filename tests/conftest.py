@@ -3,6 +3,10 @@ import yaml
 import pytest
 import shutil
 
+from config import KonsoleConfig
+from skabenclient.config import SystemConfig
+
+
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
 @pytest.fixture(scope="module")
@@ -18,12 +22,6 @@ def write_config(config, fname):
         return path
     except Exception:
         raise
-
-
-def make_object(obj, path, system_config=None):
-    if system_config:
-        return obj(path, system_config)
-    return obj(path, root=root_dir)
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -56,9 +54,12 @@ def write_config_fixture():
 @pytest.fixture()
 def get_config(request):
 
-    def _wrap(config_obj, config_dict, **kwargs):
+    def _wrap(_type, config_dict, **kwargs):
         path = write_config(config_dict, kwargs.get('fname', 'not_named.yml'))
-        config = make_object(config_obj, path, system_config=kwargs.get("system_config"))
+        if _type == "system":
+            config = SystemConfig(path, root=root_dir)
+        else:
+            config = KonsoleConfig(path, system_config=kwargs.get("system_config"))
 
         def _td():
             try:

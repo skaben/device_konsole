@@ -12,19 +12,54 @@ def _iface():
     stream.close()
     return iface_name.rstrip()
 
+
+ASSET_ROOT = os.path.join("res", "assets")
+
+
 SYSTEM = {
     "topic": "terminal",
     "iface": _iface(),
-    "assets_path": os.path.join("res", "assets"),
+    "assets_root": ASSET_ROOT,
+    "asset_types": ['image', 'audio', 'video', 'text'],
     "http_retries": 1
 }
 
 
-EXAMPLE = {
+@pytest.fixture
+def get_system_config(get_config):
+    cfg = get_config("system", SYSTEM, fname="system.yml")
+    assert isinstance(cfg, SystemConfig)
+    return cfg
+
+
+def test_konsole_config(get_config, get_system_config):
+    """test device config start with empty config no matter what in config file"""
+    cfg = get_system_config
+    config = get_config("dev", {"not": "minimal"},
+                        fname="device.yml",
+                        system_config=cfg)
+
+    assert config.data == config.minimal_essential_conf
+
+
+def test_konsole_extended_parsing(get_config, get_system_config, monkeypatch):
+    config = get_config(KonsoleConfig,
+                        {},
+                        fname="device.yml",
+                        system_config=get_system_config)
+    config.make_asset_paths()
+
+    ftype = "audio"
+    fname = "snd.ogg"
+    fhash = "1234AAA"
+
+    monkeypatch.setattr(config, "get_json", lambda x: x)
+    monkeypatch.setattr(config, "parse_modes", lambda x: {"modes": x})
+    monkeypatch.setattr(config, "get_files_async", lambda x: {fhash: x[0]})  # WARN!!!
+
+    EXAMPLE = {
         "file_list": {
-            "MqmVaQ7L": "/test/snd.ogg",
-            "MqmVaQ7F": "/sound/snd.ogg",
-            "MqmVaQ7R": "/another/snd.ogg",
+            fhash: f"/{ftype}/{fname}",
         },
         "modes_normal": [
             "/api/workmode/1/"
@@ -36,37 +71,19 @@ EXAMPLE = {
         "powered": True,
         "blocked": False,
         "hacked": False
-}
-
-
-@pytest.fixture
-def get_system_config(get_config):
-    return get_config(SystemConfig, SYSTEM, fname="system.yml")
-
-
-def test_konsole_config(get_config, get_system_config):
-    """test device config start with empty config no matter what in config file"""
-    config = get_config(KonsoleConfig,
-                        {},
-                        fname="device.yml",
-                        system_config=get_system_config)
-
-    assert config.data == config.minimal_essential_conf
-
-
-def test_konsole_extended_datahold_parsing(get_config, get_system_config, monkeypatch):
-    config = get_config(KonsoleConfig,
-                        {},
-                        fname="device.yml",
-                        system_config=get_system_config)
-    monkeypatch.setattr(config, "parse_json", lambda x: x)
-    monkeypatch.setattr(config, "parse_modes", lambda x: {"modes": x})
-    monkeypatch.setattr(config, "asset_dirs", ["test", "sound", "another"])
-    config.make_asset_dirs()
+    }
 
     example = {**EXAMPLE}
     config.save(example)
 
-    assert config.data.get("extended") == {"modes":  EXAMPLE.get("modes_extended")}
-    assert config.data.get("normal") == {"modes": EXAMPLE.get("modes_normal")}
-    #assert config.data.get("assets") == {"files": EXAMPLE.get("file_list")}
+    assert config.get("extended") == {"modes": EXAMPLE.get("modes_extended")}
+    assert config.get("normal") == {"modes": EXAMPLE.get("modes_normal")}
+    assert config.get("assets") == {
+        fhash: {
+            "local_path": os.path.join(get_system_config.root, ASSET_ROOT, ftype, fname),
+            "hash": fhash,
+            "url": f"/{ftype}/{fname}",
+            "file_type": ftype,
+            "loaded": False,
+        }
+    }

@@ -10,12 +10,6 @@ ESSENTIAL = {
 
 class KonsoleConfig(DeviceConfigExtended):
 
-    asset_dirs = ['image',
-                  'audio',
-                  'video',
-                  'text'
-                  ]
-
     def parse_modes(self, mode_list: list) -> list:
         if not mode_list:
             return []
@@ -25,7 +19,7 @@ class KonsoleConfig(DeviceConfigExtended):
         if not data:
             return super().save()
 
-        download_files = self.parse_files(data.pop("file_list"))
+        download_files = [item for item in self.parse_files(data.pop("file_list")).values()]
 
         data.update({
             "assets": self.get_files_async(download_files),

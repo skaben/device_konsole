@@ -12,6 +12,7 @@ services:
       - ./device.py:/app/device.py
       - ./local.log:/app/local.log
       - ./pytest.ini:/app/pytest.ini
+      - .flake8:/app/.flake8
     command: >
        sh -c "pytest /app/ && \
               flake8 /app/"
