@@ -7,6 +7,7 @@ conf/*
 node_modules/
 package-lock.json
 web/static/*
+tests/res/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

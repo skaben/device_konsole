@@ -1,0 +1,7 @@
+--index-url https://pypi.fury.io/zerthmonk/
+--extra-index-url https://pypi.org/simple/
+
+skabenclient>=1.16.0
+skabenproto>=1.18
+
+
