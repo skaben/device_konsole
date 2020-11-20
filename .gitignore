@@ -8,6 +8,7 @@ node_modules/
 package-lock.json
 web/static/*
 tests/res/*
+assets/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

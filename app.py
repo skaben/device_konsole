@@ -24,7 +24,7 @@ if __name__ == "__main__":
     app_config.logger(file_path=log_path)
     # setting initial device config
     dev_config = KonsoleConfig(dev_config_path, app_config)
-
+    dev_config.make_asset_paths()
     device = KonsoleDevice(app_config, dev_config)
     start_app(app_config=app_config,
               device=device)

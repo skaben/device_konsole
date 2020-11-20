@@ -10,21 +10,31 @@ ESSENTIAL = {
 
 class KonsoleConfig(DeviceConfigExtended):
 
+    WORKMODE_API_URL = '/api/workmode/'
+
+    def make_api_url(self, mode_id):
+        # todo: bullshit URL assembling. must be refactored
+        return f'http://{self.system.get("broker_ip")}{self.WORKMODE_API_URL}{mode_id}'
+
     def parse_modes(self, mode_list: list) -> list:
         if not mode_list:
             return []
-        return [self.parse_json(mode) for mode in mode_list]
+        return [self.get_json(self.make_api_url(mode)) for mode in mode_list]
 
     def save(self, data=None):
         if not data:
             return super().save()
 
-        download_files = [item for item in self.parse_files(data.pop("file_list")).values()]
+        try:
+            file_list = data.pop("file_list")
+            download_files = [item for item in self.parse_files(file_list).values()]
 
-        data.update({
-            "assets": self.get_files_async(download_files),
-            "normal": self.parse_modes(data.pop("modes_normal")),
-            "extended": self.parse_modes(data.pop("modes_extended"))
-        })
+            data.update({
+                "assets": self.get_files_sync(download_files),
+                #"normal": self.parse_modes(data.pop("modes_normal")),
+                #"extended": self.parse_modes(data.pop("modes_extended"))
+            })
 
-        return super().save(data)
+            super().save(data)
+        except Exception as e:
+            self.logger.exception('!!!')
