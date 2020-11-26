@@ -2,6 +2,7 @@ import requests
 from skabenclient.config import DeviceConfigExtended
 
 ESSENTIAL = {
+    "state_current": '',
     "assets": {}
 }
 
@@ -36,6 +37,10 @@ class KonsoleConfig(DeviceConfigExtended):
         return self.workmodes
 
     def save(self, data: dict = None):
+        """extended save method
+
+           parse terminal work modes (menu sets) and attached files
+        """
         if not data:
             return super().save()
 
@@ -49,7 +54,15 @@ class KonsoleConfig(DeviceConfigExtended):
                 "mode_list": self.workmodes,
                 "mode_switch": self.mode_switch
             })
-
+            try:
+                # oh, well, that's a crutch
+                # should be fixed when full pub/sub pattern for client event queue will be implemented
+                # todo: waiting for @hallucinite for client architecture update. go, Michael!
+                device = self.system.get('device')
+                # todo: WEBSOCKET is losing connection, update is so slow
+                device.switch_page('main')
+            except Exception:
+                raise
             super().save(data)
         except Exception:
             raise

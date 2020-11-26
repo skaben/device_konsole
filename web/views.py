@@ -47,7 +47,6 @@ def api():
     data = json.loads(request.data)
     if data.get('gamewin'):
         result = {"switchpage": "menu"}
-
     else:
         result = {"switchpage": "main"}
     return jsonify(result)
