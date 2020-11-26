@@ -1,7 +1,5 @@
+import requests
 from skabenclient.config import DeviceConfigExtended
-
-# это словарь, в котором содержится минимальный конфиг, с которым может стартовать девайс
-# сомнительное решение, надо бы это переписать потом.
 
 ESSENTIAL = {
     "assets": {}
@@ -10,31 +8,48 @@ ESSENTIAL = {
 
 class KonsoleConfig(DeviceConfigExtended):
 
-    WORKMODE_API_URL = '/api/workmode/'
+    workmodes = {}
+    mode_switch = {}
 
-    def make_api_url(self, mode_id):
-        # todo: bullshit URL assembling. must be refactored
-        return f'http://{self.system.get("broker_ip")}{self.WORKMODE_API_URL}{mode_id}'
-
-    def parse_modes(self, mode_list: list) -> list:
-        if not mode_list:
+    def get_files(self, data: dict) -> list:
+        if not data.get('file_list'):
             return []
-        return [self.get_json(self.make_api_url(mode)) for mode in mode_list]
+        files = [item for item in self.parse_files(data.pop('file_list')).values()]
+        return self.get_files_async(files)
 
-    def save(self, data=None):
+    def get_modes(self, data: dict, mode: str) -> dict:
+        if not data['mode_list'].get(mode):
+            return {}
+
+        for mode_url in data['mode_list'].pop(mode):
+            states = []
+            content = self.get_json(mode_url)
+            unique = mode_url.split('/')[-1]
+            self.workmodes.update({unique: content})
+
+            if content.get('state'):
+                states = [f'{_id}' for _id in content.pop('state')]
+
+            for state_id in states:
+                payload = {state_id: {mode: unique}}
+                self._update_nested(self.mode_switch, payload)
+        return self.workmodes
+
+    def save(self, data: dict = None):
         if not data:
             return super().save()
 
         try:
-            file_list = data.pop("file_list")
-            download_files = [item for item in self.parse_files(file_list).values()]
+            if data.get('mode_list'):
+                for mode_type in ['normal', 'extended']:
+                    self.get_modes(data, mode_type)
 
             data.update({
-                "assets": self.get_files_sync(download_files),
-                #"normal": self.parse_modes(data.pop("modes_normal")),
-                #"extended": self.parse_modes(data.pop("modes_extended"))
+                "assets": self.get_files(data),
+                "mode_list": self.workmodes,
+                "mode_switch": self.mode_switch
             })
 
             super().save(data)
-        except Exception as e:
-            self.logger.exception('!!!')
+        except Exception:
+            raise
