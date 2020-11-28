@@ -27,11 +27,6 @@ app.add_url_rule('/js/<path:path>', view_func=serve.send_js)
 app.add_url_rule('/css/<path:path>', view_func=serve.send_css)
 app.add_url_rule('/fonts/<path:path>', view_func=serve.send_fonts)
 app.add_url_rule('/sounds/<path:path>', view_func=serve.send_sounds)
-# api
-app.add_url_rule('/api/event', view_func=views.api, methods=["POST", "PUT"])
-app.add_url_rule('/api/menu', view_func=views.menu)
-app.add_url_rule('/api/device', view_func=views.device)
-app.add_url_rule('/api/hack', view_func=views.gamedata)
 
 
 @app.errorhandler(404)

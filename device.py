@@ -61,7 +61,8 @@ class KonsoleDevice(BaseDevice):
 
     def api_menu(self):
         mode = self.get_mode()
-        return jsonify(mode.get('menu_set'))
+        data = mode.get('menu_set', [])
+        return jsonify(data)
 
     def api_main(self):
         mode = self.get_mode()
