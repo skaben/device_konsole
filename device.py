@@ -1,3 +1,4 @@
+import time
 import webview
 import threading
 
@@ -23,6 +24,7 @@ class KonsoleDevice(BaseDevice):
     GUI = 'qt'  # qt or gtk
     # TODO: move to config
     host = "http://127.0.0.1:5000/"
+    headless = True
     ws_path = "ws"
     config_class = KonsoleConfig
 
@@ -69,8 +71,8 @@ class KonsoleDevice(BaseDevice):
         data = {
             'header': mode.get('header'),
             'footer': mode.get('footer'),
-            'blocked': self.config.get('blocked'),
-            'powered': self.config.get('powered')
+            'blocked': self.config.get('blocked', False),
+            'powered': self.config.get('powered', True)
         }
         return jsonify(data)
 
@@ -131,6 +133,10 @@ class KonsoleDevice(BaseDevice):
             stream = StringIO()
             with redirect_stdout(stream):
                 self.start_webserver()
-                self.start_webclient()
+                if self.headless:
+                    while self.running:
+                        time.sleep(.1)
+                else:
+                    self.start_webclient()
         except Exception:
             raise
