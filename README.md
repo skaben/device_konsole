@@ -2,7 +2,7 @@
 
 экспериментальный web терминал
 
-config syntax://
+config syntax:
 
 ```
 topic: 'terminal'
@@ -17,4 +17,6 @@ asset_types:
   - video
   - text
 http_retries: 1
+standalone: bool
+headless: bool
 ```

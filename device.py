@@ -24,7 +24,6 @@ class KonsoleDevice(BaseDevice):
     GUI = 'qt'  # qt or gtk
     # TODO: move to config
     host = "http://127.0.0.1:5000/"
-    headless = True
     ws_path = "ws"
     config_class = KonsoleConfig
 
@@ -41,6 +40,7 @@ class KonsoleDevice(BaseDevice):
     def __init__(self, system_config, device_config):
         super().__init__(system_config, device_config)
         self.running = None
+        self.headless = system_config.get('headless')
         self.socketio = SocketIO(flask_app, path=self.ws_path, ping_interval=1)
         # events from frontend
         self.socketio.on_event("gamewin", self.game_win)
@@ -133,10 +133,10 @@ class KonsoleDevice(BaseDevice):
             stream = StringIO()
             with redirect_stdout(stream):
                 self.start_webserver()
-                if self.headless:
+                if not self.headless:
+                    self.start_webclient()
+                else:
                     while self.running:
                         time.sleep(.1)
-                else:
-                    self.start_webclient()
         except Exception:
             raise
