@@ -60,12 +60,6 @@ class KonsoleDevice(BaseDevice):
                 result = all_modes.get(current_switch.get(mode_type, '0'), {})
         return result
 
-    def parse_menu(self, menu_data):
-        pass
-        #file_name = menu_data.pop('')
-        #file_data =
-        #file_type =
-
     def api_menu(self):
         mode = self.get_mode()
         data = mode.get('menu_set', [])
