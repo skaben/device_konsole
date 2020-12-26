@@ -21,11 +21,8 @@ class KonsoleDevice(BaseDevice):
         send_message(data) -> отправить сообщение от имени девайса во внутреннюю очередь
     """
 
-    GUI = 'qt'  # qt or gtk
-    # TODO: move to config
-    host = "http://127.0.0.1:5000/"
-    ws_path = "ws"
     config_class = KonsoleConfig
+    ws_path = 'ws'
 
     pages = {
         "main": "main",
@@ -41,6 +38,8 @@ class KonsoleDevice(BaseDevice):
         super().__init__(system_config, device_config)
         self.running = None
         self.headless = system_config.get('headless')
+        self.gui = system_config.get('gui', 'qt')
+        self.host = system_config.get('host', 'http://127.0.0.1:5000/')
         self.socketio = SocketIO(flask_app, path=self.ws_path, ping_interval=1)
         # events from frontend
         self.socketio.on_event("gamewin", self.game_win)
@@ -60,6 +59,12 @@ class KonsoleDevice(BaseDevice):
             if current_switch:
                 result = all_modes.get(current_switch.get(mode_type, '0'), {})
         return result
+
+    def parse_menu(self, menu_data):
+        pass
+        #file_name = menu_data.pop('')
+        #file_data =
+        #file_type =
 
     def api_menu(self):
         mode = self.get_mode()
@@ -122,7 +127,7 @@ class KonsoleDevice(BaseDevice):
                               width=1024,
                               height=780
                               )
-        webview.start(gui=self.GUI)
+        webview.start(gui=self.gui)
 
     def run(self):
         """device run routine"""

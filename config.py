@@ -15,7 +15,7 @@ class KonsoleConfig(DeviceConfigExtended):
     def get_files(self, data: dict) -> list:
         if not data.get('file_list'):
             return []
-        files = [item for item in self.parse_files(data.pop('file_list')).values()]
+        files = self.parse_files(data.pop('file_list')).values()
         return self.get_files_async(files)
 
     def get_modes(self, data: dict, mode: str) -> dict:
