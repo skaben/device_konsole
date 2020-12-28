@@ -22,10 +22,10 @@ class KonsoleDevice(BaseDevice):
     """
 
     config_class = KonsoleConfig
-    ws_path = 'ws'
+    ws_path = "ws"
 
     pages = {
-        "main": "main",
+        "load": "load",
         "menu": "menu",
         "hack": "hack"
     }
@@ -40,6 +40,8 @@ class KonsoleDevice(BaseDevice):
         self.headless = system_config.get("headless")
         self.host = system_config.get("host", "http://127.0.0.1:5000/")
         self.gui = system_config.get("gui", "qt")
+        self.resolution = system.config.get("resolution", (1024, 768))
+        self.fullscreen = system_config.get("fullscreen", False)
         self.init_socketio()
 
     def init_socketio(self):
@@ -89,13 +91,13 @@ class KonsoleDevice(BaseDevice):
     def game_win(self):
         self.logger.info("[!] terminal game solved")
         self.state_update({"hacked": True})
-        self.switch_page("menu")
+        self.switch_page("main")
         self.logger.debug(self.config.data)
 
     def game_lose(self):
-        self.logger.info("[!] terminal game solved")
+        self.logger.info("[!] terminal game not solved")
         self.state_update({"blocked": True})
-        self.switch_page("main")
+        self.switch_page("load")
         self.logger.debug(self.config.data)
 
     def switch_page(self, page_name: str):
@@ -106,8 +108,9 @@ class KonsoleDevice(BaseDevice):
 
     def start_webserver(self):
         """start flask app in separate thread"""
-        flask_app.add_url_rule("/api/menu", view_func=self.api_menu)
-        flask_app.add_url_rule("/api/main", view_func=self.api_main)
+        # todo: согласовать роуты с фронтом
+        flask_app.add_url_rule("/api/main", view_func=self.api_menu)
+        flask_app.add_url_rule("/api/load", view_func=self.api_main)
         flask_app.add_url_rule("/api/hack", view_func=self.api_hack)
 
         def flask_io():
@@ -119,12 +122,14 @@ class KonsoleDevice(BaseDevice):
 
     def start_webclient(self):
         """start pywebview web-client in main thread"""
-        webview.create_window("TERMINAL",
-                              self.host,
-                              fullscreen=False,
-                              width=1024,
-                              height=780
-                              )
+        (width, height) = self.resolution
+        webview.create_window(
+            "TERMINAL",
+            self.host,
+            fullscreen=self.fullscreen,
+            width=width,
+            height=height
+        )
         webview.start(gui=self.gui)
 
     def run(self):
@@ -140,6 +145,6 @@ class KonsoleDevice(BaseDevice):
                     self.start_webclient()
                 else:
                     while self.running:
-                        time.sleep(.1)
+                        time.sleep(100)
         except Exception:
             raise
