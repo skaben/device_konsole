@@ -14,7 +14,7 @@ broker_ip: <IP>
 # MQTT auth
 username: <username>
 password: <password>
-# standalone=True start app without network support
+# standalone: true start app without network support
 standalone: bool
 # API server IP
 host: <IP:port>
@@ -28,12 +28,12 @@ asset_types:
   - audio
   - video
   - text
-# headless=True start app without web-interface
+# headless: true start app without web-interface
 headless: bool
-# screen resolution
+# web-interface screen resolution
 resolution:
   - 1024
   - 768
-# fullscreen=True start in fullscreen mode
+# fullscreen: true start web-interface in fullscreen mode
 fullscreen: bool
 ```
