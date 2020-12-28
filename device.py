@@ -21,6 +21,10 @@ class KonsoleDevice(BaseDevice):
         send_message(data) -> отправить сообщение от имени девайса во внутреннюю очередь
     """
 
+<<<<<<< Updated upstream
+=======
+    ws_path = "ws"
+>>>>>>> Stashed changes
     config_class = KonsoleConfig
     ws_path = 'ws'
 
@@ -37,6 +41,7 @@ class KonsoleDevice(BaseDevice):
     def __init__(self, system_config, device_config):
         super().__init__(system_config, device_config)
         self.running = None
+<<<<<<< Updated upstream
         self.headless = system_config.get('headless')
         self.gui = system_config.get('gui', 'qt')
         self.host = system_config.get('host', 'http://127.0.0.1:5000/')
@@ -46,6 +51,7 @@ class KonsoleDevice(BaseDevice):
         self.socketio.on_event("gamelose", self.game_lose)
         #self.socketio.on_event("fetch", self.api_data)
         self.socketio.on_event("testws", self.testws)
+        return self.socketio
 
     def get_mode(self) -> dict:
         """get workmode for current alert state and terminal status (hacked|normal)"""
@@ -58,11 +64,13 @@ class KonsoleDevice(BaseDevice):
             current_switch = mode_switch.get(current_state)
             if current_switch:
                 result = all_modes.get(current_switch.get(mode_type, '0'), {})
+                result = all_modes.get(current_switch.get(mode_type, "0"), {})
         return result
 
     def api_menu(self):
         mode = self.get_mode()
         data = mode.get('menu_set', [])
+        data = mode.get("menu_set", [])
         return jsonify(data)
 
     def api_main(self):
@@ -72,6 +80,10 @@ class KonsoleDevice(BaseDevice):
             'footer': mode.get('footer'),
             'blocked': self.config.get('blocked', False),
             'powered': self.config.get('powered', True)
+            "header": mode.get("header"),
+            "footer": mode.get("footer"),
+            "blocked": self.config.get("blocked", False),
+            "powered": self.config.get("powered", True)
         }
         return jsonify(data)
 
@@ -80,24 +92,28 @@ class KonsoleDevice(BaseDevice):
 
     def testws(self):
         self.logger.info('receive test, reply with full config')
+        self.logger.info("receive test, reply with full config")
         self.socketio.emit(self.cmd_test, self.config.data)
 
     def game_win(self):
         self.logger.info("[!] terminal game solved")
         self.state_update({"hacked": True})
         self.switch_page('menu')
+        self.switch_page("menu")
         self.logger.debug(self.config.data)
 
     def game_lose(self):
         self.logger.info("[!] terminal game solved")
         self.state_update({"blocked": True})
         self.switch_page('main')
+        self.switch_page("main")
         self.logger.debug(self.config.data)
 
     def switch_page(self, page_name: str):
         page = self.pages.get(page_name)
         if not page:
             self.logger.error(f'no route for page {page_name}')
+            self.logger.error(f"no route for page {page_name}")
         self.socketio.emit(self.cmd_switch, {"data": page})
 
     def start_webserver(self):
@@ -105,6 +121,9 @@ class KonsoleDevice(BaseDevice):
         flask_app.add_url_rule('/api/menu', view_func=self.api_menu)
         flask_app.add_url_rule('/api/main', view_func=self.api_main)
         flask_app.add_url_rule('/api/hack', view_func=self.api_hack)
+        flask_app.add_url_rule("/api/menu", view_func=self.api_menu)
+        flask_app.add_url_rule("/api/main", view_func=self.api_main)
+        flask_app.add_url_rule("/api/hack", view_func=self.api_hack)
 
         def flask_io():
             return self.socketio.run(flask_app)
@@ -116,6 +135,7 @@ class KonsoleDevice(BaseDevice):
     def start_webclient(self):
         """start pywebview web-client in main thread"""
         webview.create_window('TERMINAL',
+        webview.create_window("TERMINAL",
                               self.host,
                               fullscreen=False,
                               width=1024,
