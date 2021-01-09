@@ -36,16 +36,22 @@ class KonsoleConfig(DeviceConfigExtended):
         workmode.update(menu_set=result)
         return workmode
 
+    def get_mode_content(self, unique: str, mode_url: str) -> dict:
+        response = self.get_json(mode_url)
+        content = self.parse_menu(response)
+        self.workmodes.update({unique: content})
+        return content
+
     def get_modes(self, data: dict, mode: str) -> dict:
         if not data['mode_list'].get(mode):
             return {}
 
         for mode_url in data['mode_list'].pop(mode):
             states = []
-            response = self.get_json(mode_url)
             unique = mode_url.split('/')[-1]
-            content = self.parse_menu(response)
-            self.workmodes.update({unique: content})
+            # get existing content or download JSON from remote URL
+            self.logger.info(self.workmodes)
+            content = self.workmodes.get(unique, self.get_mode_content(unique, mode_url))
 
             if content.get('state'):
                 states = [f'{_id}' for _id in content.pop('state')]
@@ -84,9 +90,7 @@ class KonsoleConfig(DeviceConfigExtended):
             try:
                 # oh, well, that's a crutch
                 # should be fixed when full pub/sub pattern for client event queue will be implemented
-                # todo: waiting for @hallucinite for client architecture update. go, Michael!
                 device = self.system.get('device')
-                # todo: WEBSOCKET is losing connection, update is so slow
                 device.switch_page('main')
             except Exception:
                 raise
