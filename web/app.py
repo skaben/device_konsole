@@ -5,19 +5,20 @@ from flask_cors import CORS, cross_origin
 
 from . import views
 from . import serve
+from . import helpers
 
 template_dir = os.path.join(os.path.dirname(__file__), 'static')
-
 
 app = Flask(__name__,
             static_url_path='',
             template_folder=template_dir)
 
-CORS(app, supports_credentials=True)
+CORS(app,
+     supports_credentials=True,
+     resources={r"/*": {"origins": helpers.cors_origins}})
 
 app.config['CORS_HEADERS'] = ['Content-Type', 'application/json']
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 1  # disable caching
-
 
 # URLs
 
