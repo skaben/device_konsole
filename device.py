@@ -9,6 +9,7 @@ from flask_socketio import SocketIO
 
 from skabenclient.device import BaseDevice
 from web.app import app as flask_app
+from web.helpers import cors_origins
 from config import KonsoleConfig
 
 
@@ -40,7 +41,10 @@ class KonsoleDevice(BaseDevice):
         self.headless = system_config.get('headless')
         self.gui = system_config.get('gui', 'qt')
         self.host = system_config.get('host', 'http://127.0.0.1:5000/')
-        self.socketio = SocketIO(flask_app, path=self.ws_path, ping_interval=1)
+        self.socketio = SocketIO(flask_app,
+                                 path=self.ws_path,
+                                 ping_interval=1,
+                                 cors_allowed_origins=cors_origins)
         # events from frontend
         self.socketio.on_event("gamewin", self.game_win)
         self.socketio.on_event("gamelose", self.game_lose)
