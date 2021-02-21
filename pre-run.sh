@@ -13,17 +13,12 @@ if [[ -z $1 ]]; then
   help
 fi
 
-
-SYS_REQUIREMENTS='python3-gi python3-gi-cairo gir1.2-gtk-3.0 build-essential pkg-config libcairo2 libcairo2-dev libgirepository1.0-dev zlib1g-dev zlib1g bzip2'
-
 manual () {
   echo -e "> manual deploy process:\n"\
-    "   python3.7 python3.7-venv should be installed\n"\
-    "   python3.7 -m venv venv\n"\
-    "   source ./venv/bin/activate\n"\
-    "   pip install --upgrade pip\n"\
-    "   pip install -r requirements.txt\n"\
-    "   ./pre-run.sh reset\n"
+      "   python3.7 python3.7-venv should be installed"\
+      "   pip install --upgrade pip && pip install pipenv"\
+      "   pipenv update"\
+      "   ./pre-run.sh reset\n"
   exit
 }
 
@@ -69,18 +64,25 @@ deploy () {
     echo -e "trying to install $PYTHON"
   fi
 
-  echo -e "> installing dependencies with apt"
-  sudo apt-get install -y --no-install-recommends $PYTHON $PYTHON_VENV $PYTHON_DEV $SYS_REQUIREMENTS
+  echo -e "> installing dependencies with apt..."
+  sudo apt update
+  sudo apt install -y --no-install-recommends $PYTHON $PYTHON_VENV $PYTHON_DEV python3-pip\
+       libsdl2-dev libsdl2-ttf-2.0 libsdl2-ttf-dev libsdl2-image-dev libsdl2-mixer-dev wget\
+       libglu1-mesa-dev mesa-common-dev build-essential libfontconfig1 qt5-default python3-testresources
 
   echo -e "> setting up virtual environment"
-  delete_if_exists "venv"
-  $PYTHON -m venv venv
-  source "./venv/bin/activate"
-  pip install --upgrade pip
-  pip install -r requirements.txt --no-cache-dir
+  $PYTHON -m pip install --upgrade pip
+  $PYTHON -m pip install pipenv
+  $PYTHON -m pipenv update
 
   delete_if_exists "conf"
   mkdir conf
+
+  echo -e 'requesting latest frontend build'
+  wget https://github.com/skaben/device_konsole_front/raw/build/dist.tar.gz &&
+  tar xzf dist.tar.gz
+  mv home/runner/work/device_konsole_front/device_konsole_front/app/dist/* web/static
+  rm -r home dist.tar.gz*
 
   echo -e "... done!\n"
   echo -e "\n  --------"
