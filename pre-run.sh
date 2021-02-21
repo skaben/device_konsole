@@ -65,12 +65,15 @@ deploy () {
   fi
 
   echo -e "> installing dependencies with apt..."
-  sudo apt-get install -y --no-install-recommends $PYTHON $PYTHON_VENV $PYTHON_DEV \
+  sudo apt update
+  sudo apt install -y --no-install-recommends $PYTHON $PYTHON_VENV $PYTHON_DEV python3-pip\
        libsdl2-dev libsdl2-ttf-2.0 libsdl2-ttf-dev libsdl2-image-dev libsdl2-mixer-dev \
-       libglu1-mesa-dev mesa-common-dev build-essential libfontconfig1 qt5-default
+       libglu1-mesa-dev mesa-common-dev build-essential libfontconfig1 qt5-default python3-testresources
 
   echo -e "> setting up virtual environment"
-  pipenv update
+  $PYTHON -m pip install --upgrade pip
+  $PYTHON -m pip install pipenv
+  $PYTHON -m pipenv update
 
   delete_if_exists "conf"
   mkdir conf
