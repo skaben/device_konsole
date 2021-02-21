@@ -50,7 +50,6 @@ class KonsoleConfig(DeviceConfigExtended):
             states = []
             unique = mode_url.split('/')[-1]
             # get existing content or download JSON from remote URL
-            self.logger.info(self.workmodes)
             content = self.workmodes.get(unique, self.get_mode_content(unique, mode_url))
 
             if content.get('state'):
