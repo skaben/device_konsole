@@ -67,7 +67,7 @@ deploy () {
   echo -e "> installing dependencies with apt..."
   sudo apt update
   sudo apt install -y --no-install-recommends $PYTHON $PYTHON_VENV $PYTHON_DEV python3-pip\
-       libsdl2-dev libsdl2-ttf-2.0 libsdl2-ttf-dev libsdl2-image-dev libsdl2-mixer-dev \
+       libsdl2-dev libsdl2-ttf-2.0 libsdl2-ttf-dev libsdl2-image-dev libsdl2-mixer-dev wget\
        libglu1-mesa-dev mesa-common-dev build-essential libfontconfig1 qt5-default python3-testresources
 
   echo -e "> setting up virtual environment"
@@ -77,6 +77,12 @@ deploy () {
 
   delete_if_exists "conf"
   mkdir conf
+
+  echo -e 'requesting latest frontend build'
+  wget https://github.com/skaben/device_konsole_front/raw/build/dist.tar.gz &&
+  tar xzf dist.tar.gz
+  mv home/runner/work/device_konsole_front/device_konsole_front/app/dist/* web/static
+  rm -r home dist.tar.gz*
 
   echo -e "... done!\n"
   echo -e "\n  --------"
