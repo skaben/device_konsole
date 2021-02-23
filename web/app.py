@@ -21,7 +21,6 @@ app.config['CORS_HEADERS'] = ['Content-Type', 'application/json']
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 1  # disable caching
 
 # URLs
-
 app.add_url_rule('/', view_func=views.index)
 
 # serve static the dumb way
