@@ -29,7 +29,7 @@ class KonsoleDevice(BaseDevice):
     ws_path = "ws"
 
     pages = {
-        "main": "main",
+        "load": "load",
         "menu": "menu",
         "hack": "hack"
     }
@@ -49,6 +49,7 @@ class KonsoleDevice(BaseDevice):
         self.gui = system_config.get("gui", "qt")
         self.resolution = system_config.get("resolution", (1024, 768))
         self.fullscreen = system_config.get("fullscreen", False)
+
         self.resources_dir = os.path.join(system_config.root,
                                           system_config.get('resources'))
         self.init_socketio()
