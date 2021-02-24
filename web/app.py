@@ -21,7 +21,6 @@ app.config['CORS_HEADERS'] = ['Content-Type', 'application/json']
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 1  # disable caching
 
 # URLs
-
 app.add_url_rule('/', view_func=views.index)
 
 # serve static the dumb way
@@ -31,10 +30,10 @@ app.add_url_rule('/fonts/<path:path>', view_func=serve.send_font)
 app.add_url_rule('/sounds/<path:path>', view_func=serve.send_sound)
 app.add_url_rule('/images/<path:path>', view_func=serve.send_image)
 
-app.add_url_rule('/asset/texts/<path:path>', view_func=serve.send_asset_text)
-app.add_url_rule('/asset/sounds/<path:path>', view_func=serve.send_asset_sound)
-app.add_url_rule('/asset/images/<path:path>', view_func=serve.send_asset_image)
-app.add_url_rule('/asset/videos/<path:path>', view_func=serve.send_asset_video)
+app.add_url_rule('/assets/texts/<path:path>', view_func=serve.send_asset_text)
+app.add_url_rule('/assets/sounds/<path:path>', view_func=serve.send_asset_sound)
+app.add_url_rule('/assets/images/<path:path>', view_func=serve.send_asset_image)
+app.add_url_rule('/assets/videos/<path:path>', view_func=serve.send_asset_video)
 
 
 @app.errorhandler(404)

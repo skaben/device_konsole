@@ -14,27 +14,52 @@ class KonsoleConfig(DeviceConfigExtended):
 
     def parse_menu(self, workmode):
         result = []
+
         for item in workmode.get('menu_set', []):
             menu_name = item.pop('name')
             item_timer = item.pop('timer')
-            (item_type, item_hash) = list(item.items())[0]
             try:
-                item_path = self.data['assets'].get(item_hash).get('local_path').split('/')[-1]
-                if not item_path:
-                    raise Exception('item not presented')
-            except Exception as e:
-                print(e)
+                data = self.parse_item_data(item)
+            except Exception:
+                self.logger.exception('when parsing menu:')
                 continue
             else:
-                result.append({
-                    'type': item_type,
-                    'data': item_path,
-                    'name': f'{item_type} document',
+                data.update({
                     'menu': menu_name,
                     'timer': item_timer
                 })
-        workmode.update(menu_set=result)
+                result.append(data)
+        if result:
+            workmode.update(menu_set=result)
         return workmode
+
+    def parse_item_data(self, item):
+        (item_type, item_hash) = list(item.items())[0]
+        if item_type == 'game':
+            data = self.parse_game_item(item)
+        elif item_type == 'text':
+            data = self.parse_text_item(item)
+        else:
+            data = self.parse_file_item(item_hash)
+
+        return {
+            'type': item_type,
+            'data': data,
+            'name': f'{item_type} document'
+        }
+
+    def parse_game_item(self, item):
+        return item.get('game')
+
+    def parse_text_item(self, item):
+        return item.get('text')
+
+    def parse_file_item(self, item_hash):
+        item_path = self.data['assets'].get(item_hash).get('local_path').split('/')[-1]
+        self.logger.error(f'{item_path}')
+        if not item_path:
+            raise Exception(f'item not presented {item_path}')
+        return item_path
 
     def get_mode_content(self, unique: str, mode_url: str) -> dict:
         response = self.get_json(mode_url)
@@ -62,7 +87,7 @@ class KonsoleConfig(DeviceConfigExtended):
 
     def get_files(self, data: dict) -> list:
         if not data.get('file_list'):
-            return []
+            return {}
         files = self.parse_files(data.pop('file_list')).values()
         return self.get_files_async(files)
 
