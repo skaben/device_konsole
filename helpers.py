@@ -9,7 +9,8 @@ class WordGen(object):
     def __init__(self, wordset_dir, word_quantity=16, word_len=8):
         self.quantity = word_quantity
         self.word_len = word_len
-        self.vocabulary = self.load_vocabulary(os.path.join(wordset_dir, 'words{}.txt'.format(word_len)))
+        vocabulary_dir = os.path.join(wordset_dir, 'words{}.txt'.format(word_len))
+        self.vocabulary = self.load_vocabulary(vocabulary_dir)
 
     @staticmethod
     def load_vocabulary(file_path):
