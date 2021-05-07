@@ -27,9 +27,10 @@ front:
 
 .PHONY: config
 config:
+	@make clean
 	@mkdir conf resources
 	@chmod +x ./templates/make-conf.sh
-	@./templates/make-conf.sh
+	@sh ./templates/make-conf.sh
 	@tar xvf resources.tar.gz
 	@echo 'config created, check ./conf'
 
@@ -37,7 +38,6 @@ config:
 run:
 	@. ${VENV}/bin/activate
 	@python3.7 app.py
-
 
 .PHONY: clean
 clean:
