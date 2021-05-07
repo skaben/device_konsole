@@ -53,9 +53,6 @@ class KonsoleDevice(BaseDevice):
                                           system_config.get('asset_root'))
         self.init_socketio()
 
-    def get_wordgen(self):
-        self.word_gen = WordGen()
-
     def init_socketio(self):
         self.socketio = SocketIO(flask_app,
                                  path=self.ws_path,
@@ -72,21 +69,24 @@ class KonsoleDevice(BaseDevice):
     def get_mode(self) -> dict:
         """get workmode for current alert state and terminal status (hacked|normal)"""
         result = {}
-        current_state = self.config.get("alert", "0")
+        current_state = self.config.get("alert", "1")
         mode_type = "extended" if self.config.get("hacked") else "normal"
         mode_switch = self.config.get("mode_switch")
         all_modes = self.config.get("mode_list", {})
         if mode_switch:
             current_switch = mode_switch.get(current_state)
             if current_switch:
-                result = all_modes.get(current_switch.get(mode_type, "0"), {})
+                result = all_modes.get(current_switch.get(mode_type, "1"), {})
+            else:
+                # block if no current mode exists
+                self.state_update({'blocked': True})
         return result
 
     def api_menu(self):
         self.logger.debug('MENU requested')
         mode = self.get_mode()
         data = mode.get("menu_set")
-        self.logger.debug(f'MODE: {mode} DATA: {data}')
+        self.logger.debug(f'MODE: {mode}')
         return jsonify(data or {})
 
     def api_main(self):
@@ -110,7 +110,8 @@ class KonsoleDevice(BaseDevice):
         if game_data:
             data = game_data[0]
             hack = data.get('data')
-            word_dir = os.path.join(self.resources_dir, 'wordsets', self.wordset_type)
+            # word_dir = os.path.join(self.resources_dir, 'wordsets', self.wordset_type)
+            word_dir = os.path.join(self.config.system.root, 'resources', 'wordsets', self.wordset_type)
             word_gen = WordGen(word_dir, hack['wordcount'], hack['difficulty'])
             result = {
                 "words": word_gen.words,
@@ -144,10 +145,11 @@ class KonsoleDevice(BaseDevice):
         self.switch_page("main")
 
     def switch_page(self, page_name: str):
-        page = self.pages.get(page_name)
-        if not page:
-            self.logger.error(f"no route for page {page_name}")
-        self.socketio.emit(self.cmd_switch, {"data": page})
+        if not self.headless:
+            page = self.pages.get(page_name)
+            if not page:
+                self.logger.error(f"no route for page {page_name}")
+            self.socketio.emit(self.cmd_switch, {"data": page})
 
     def start_webserver(self):
         """start flask app in separate thread"""
