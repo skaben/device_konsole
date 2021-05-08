@@ -137,6 +137,7 @@ class KonsoleDevice(BaseDevice):
     def game_lose(self):
         self.logger.info("[!] terminal game not solved")
         self.state_update({"blocked": True})
+        self.send_message({"message": "access denied"})
         self.switch_page("main")
 
     def unblock(self):
