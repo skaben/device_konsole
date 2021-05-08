@@ -72,7 +72,7 @@ class KonsoleDevice(BaseDevice):
         current_state = self.config.get("alert", "1")
         mode_type = "extended" if self.config.get("hacked") else "normal"
         mode_switch = self.config.get("mode_switch")
-        all_modes = self.config.get("mode_list", {})
+        all_modes = self.config.get("menu", {})
         if mode_switch:
             current_switch = mode_switch.get(current_state)
             if current_switch:

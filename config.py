@@ -1,4 +1,3 @@
-from typing import Optional
 from skabenclient.config import DeviceConfigExtended
 
 ESSENTIAL = {
@@ -81,36 +80,6 @@ class KonsoleConfig(DeviceConfigExtended):
             raise ValueError
         return _path.split('/')[-1]
 
-    def get_mode_content(self, unique: str, mode_url: str) -> dict:
-        response = self.get_json(mode_url)
-        content = self.parse_menu(response)
-        self.workmodes.update({unique: content})
-        return content
-
-    def get_modes(self, data: dict, mode: str, forced: Optional[bool] = False) -> dict:
-        if not data['mode_list'].get(mode):
-            return {}
-
-        if forced:
-            self.workmodes = {}
-
-        for mode_url in data['mode_list'].pop(mode):
-            states = []
-            unique = mode_url.split('/')[-1]
-            # get existing content or download JSON from remote URL
-            content = self.workmodes.get(unique)
-            if not content or forced:
-                content = self.get_mode_content(unique, mode_url)
-
-            if content.get('state'):
-                states = [f'{_id}' for _id in content.pop('state')]
-
-            for state_id in states:
-                payload = {state_id: {mode: unique}}
-                self._update_nested(self.mode_switch, payload)
-
-        return self.workmodes
-
     def get_files(self, data: dict) -> dict:
         if not data.get('file_list'):
             return {}
@@ -118,30 +87,74 @@ class KonsoleConfig(DeviceConfigExtended):
         files = self.parse_files(data.pop('file_list')).values()
         return self.get_files_async(files)
 
+    def get_workmodes(self, urls: list) -> dict:
+        for url in urls:
+            mode_uid = url.split('/')[-1]
+            response = self.get_json(url)
+            parsed = self.parse_menu(response)
+            self.workmodes.update({mode_uid: parsed})
+        return self.workmodes
+
+    def gen_mode_switch(self, mode_type: str) -> dict:
+        for uid, content in self.workmodes.items():
+            state = content.get('state')
+            if not state:
+                continue
+            states = [f'{_id}' for _id in content.get('state')]
+            for state_id in states:
+                payload = {state_id: {uid: mode_type}}
+                self._update_nested(self.mode_switch, payload)
+        return self.mode_switch
+
     def save(self, data: dict = None):
         """extended save method
 
            parse terminal work modes (menu sets) and attached files
+           typical config looks like:
+
+           {
+                'file_list': {
+                    '1620381838-nvuEWpoF': 'http://127.0.0.1/media/text/документ.txt'
+                },
+                'mode_list': {
+                    'normal': [
+                        'http://127.0.0.1/api/workmode/1'
+                    ],
+                    'extended': [
+                        'http://127.0.0.1/api/workmode/1'
+                    ]
+                },
+                    'alert': '2',
+                    'uid': '080027cf78c2',
+                    'timestamp': 1620469674,
+                    'powered': True,
+                    'blocked': True,
+                    'hacked': False
+                }
+           }
+
         """
         if not data:
             return super().save()
 
+        self.logger.error(f'{data}')
+
         try:
             if data.get('mode_list'):
+                # resetting mode_switch
                 self.mode_switch = {}
-                data.update(FORCE=True)
+                unique_mode_urls = list(set(sum(list(data['mode_list'].values()), [])))
+                self.workmodes = self.get_workmodes(unique_mode_urls)
+
+                # data.update(FORCE=True)
                 for mode_type in ['normal', 'extended']:
                     # fixme: forced should be optional
-                    self.get_modes(data, mode_type, forced=True)
-            self.workmodes = self.parse_menu(self.workmodes)
+                    self.gen_mode_switch(mode_type)
 
-            data.update({
-                "assets": self.get_files(data),
-                "mode_list": self.workmodes,
-                "mode_switch": self.mode_switch
-            })
-            self.logger.error(f'{self.mode_switch}')
-            self.logger.warning(f'{data}')
+                data.update(menu=self.workmodes)
+
+            data.update(assets=self.get_files(data))
+            self.logger.info(f'{self.mode_switch}')
 
             try:
                 # oh, well, that's a crutch
