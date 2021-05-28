@@ -10,6 +10,11 @@
 # asset_root: 'required asset types supported'
 
 iface: ${iface}
+headless: false
+standalone: false
+broker_ip: 127.0.0.1
+username:
+password:
 asset_root: "./assets"
 asset_types:
   - audio

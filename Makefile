@@ -12,7 +12,7 @@ install:
    libsdl2-image-dev libsdl2-mixer-dev wget libglu1-mesa-dev mesa-common-dev build-essential \
    libfontconfig1 qt5-default python3-testresources
 	@python3.7 -m venv ${VENV}
-	@. ${VENV}/bin/activate
+	@sh ${VENV}/bin/activate
 	@python3.7 -m pip install --upgrade pip
 	@python3.7 -m pip install -r requirements.txt
 
@@ -27,9 +27,10 @@ front:
 
 .PHONY: config
 config:
+	@make clean
 	@mkdir conf resources
 	@chmod +x ./templates/make-conf.sh
-	@./templates/make-conf.sh
+	@sh ./templates/make-conf.sh
 	@tar xvf resources.tar.gz
 	@echo 'config created, check ./conf'
 
@@ -37,7 +38,6 @@ config:
 run:
 	@. ${VENV}/bin/activate
 	@python3.7 app.py
-
 
 .PHONY: clean
 clean:

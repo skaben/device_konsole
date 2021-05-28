@@ -8,5 +8,5 @@ CONF_DIR="$SKABEN_ROOT_DIR/conf"
 
 
 sed -e "s/\${iface}/'$IFACE'/" \
-    -e "s+\${dirpath}+$SKABEN_ROOT_DIR+" "templates/system.yml.template" > "$CONF_DIR/system.yml"
+    -e "s+\${dirpath}+$SKABEN_ROOT_DIR+" "${SCRIPTPATH}/system.yml.template" > "$CONF_DIR/system.yml"
 touch "$CONF_DIR/device.yml"  # create empty device config
