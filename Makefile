@@ -8,7 +8,7 @@ VENV ?= ~/skaben-term-venv
 
 .PHONY: install
 install:
-	@sudo apt install -y --no-install-recommends libsdl2-dev libsdl2-ttf-2.0 libsdl2-ttf-dev \
+	@sudo apt install -y --no-install-recommends libsdl2-dev\
    libsdl2-image-dev libsdl2-mixer-dev wget libglu1-mesa-dev mesa-common-dev build-essential \
    libfontconfig1 qt5-default python3-testresources
 	@python3.7 -m venv ${VENV}

@@ -1,6 +1,5 @@
 import os
 import time
-import webview
 import threading
 
 from io import StringIO
@@ -31,7 +30,8 @@ class KonsoleDevice(BaseDevice):
     pages = {
         "load": "load",
         "menu": "menu",
-        "hack": "hack"
+        "hack": "hack",
+        "main": "main"
     }
 
     cmd_test = "cmd_test"
@@ -46,7 +46,6 @@ class KonsoleDevice(BaseDevice):
         self.running = None
         self.headless = system_config.get("headless")
         self.host = system_config.get("host", "http://127.0.0.1:5000/")
-        self.gui = system_config.get("gui", "qt")
         self.resolution = system_config.get("resolution", (1024, 768))
         self.fullscreen = system_config.get("fullscreen", False)
         self.resources_dir = os.path.join(system_config.root,
@@ -165,18 +164,6 @@ class KonsoleDevice(BaseDevice):
                               daemon=True)
         ft.start()
 
-    def start_webclient(self):
-        """start pywebview web-client in main thread"""
-        (width, height) = self.resolution
-        webview.create_window(
-            "TERMINAL",
-            self.host,
-            fullscreen=self.fullscreen,
-            width=width,
-            height=height
-        )
-        webview.start(gui=self.gui)
-
     def run(self):
         """device run routine"""
         super().run()
@@ -186,9 +173,7 @@ class KonsoleDevice(BaseDevice):
             stream = StringIO()
             with redirect_stdout(stream):
                 self.start_webserver()
-                if not self.headless:
-                    self.start_webclient()
-                else:
+                if self.headless:
                     while self.running:
                         time.sleep(100)
         except Exception:
