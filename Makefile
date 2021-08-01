@@ -2,7 +2,8 @@
 DIST ?= dist.tar.gz
 DIST_PATH ?= home/runner/work/device_konsole_front/device_konsole_front/app/dist
 FRONTEND_BUILD_LATEST ?= https://github.com/skaben/device_konsole_front/raw/build/${DIST}
-VENV ?= /home/wowa/venv
+VENV ?= ~/skaben-term-venv
+PYTHON := ${VENV}/bin/python3.7
 
 
 
@@ -12,9 +13,8 @@ install:
    libsdl2-image-dev libsdl2-mixer-dev wget libglu1-mesa-dev mesa-common-dev build-essential \
    libfontconfig1 qt5-default python3-testresources
 	@python3.7 -m venv ${VENV}
-	@sh ${VENV}/bin/activate
-	@python3.7 -m pip install --upgrade pip
-	@python3.7 -m pip install -r requirements.txt
+	@${PYTHON} -m pip install --upgrade pip
+	@${PYTHON} -m pip install -r requirements.txt
 
 .PHONY: front
 front:
@@ -36,11 +36,11 @@ config:
 
 .PHONY: run
 run:
-	@sh ${VENV}/bin/activate
-	@python3.7 app.py
+	@${PYTHON} app.py
 
 .PHONY: clean
 clean:
 	@rm -rf ./conf
 	@rm -rf ./resources	
+	@rm -rf ${VENV}
 

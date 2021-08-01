@@ -8,34 +8,13 @@ ESSENTIAL = {
 
 class KonsoleConfig(DeviceConfigExtended):
 
-    workmodes = {}
-    mode_switch = {}
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def parse_menu(self, workmode):
-        result = []
-
-        for item in workmode.get('menu_set', []):
-            menu_name = item.pop('name')
-            item_timer = item.pop('timer')
-            try:
-                data = self.parse_item_data(item)
-            except Exception:
-                self.logger.exception('when parsing menu:')
-                continue
-            else:
-                data.update({
-                    'menu': menu_name,
-                    'timer': item_timer
-                })
-                result.append(data)
-        if result:
-            workmode.update(menu_set=result)
-        return workmode
-
-    def parse_item_data(self, item):
-        (item_type, item_hash) = list(item.items())[0]
+    def parse_item_data(self, menu_item):
+        (item_type, item_hash) = list(menu_item.items())[0]
         if item_type == 'game':
-            data = self.parse_game_item(item)
+            data = self.parse_game_item(menu_item)
         elif item_type == 'text':
             data = self.parse_text_item(item_hash)
         else:
@@ -87,39 +66,6 @@ class KonsoleConfig(DeviceConfigExtended):
         files = self.parse_files(data.pop('file_list')).values()
         return self.get_files_async(files)
 
-    def get_workmodes(self, urls: list) -> dict:
-        for url in urls:
-            mode_uid = url.split('/')[-1]
-            response = self.get_json(url)
-            parsed = self.parse_menu(response)
-            self.workmodes.update({mode_uid: parsed})
-        return self.workmodes
-
-    def gen_mode_switch(self, mode_type: str) -> dict:
-        for uid, content in self.workmodes.items():
-            state = content.get('state')
-            if not state:
-                continue
-            states = [f'{_id}' for _id in content.get('state')]
-            for state_id in states:
-                payload = {state_id: {mode_type: uid}}
-                self._update_nested(self.mode_switch, payload)
-        return self.mode_switch
-
-    def get_mode_switch(self, data = None):
-        if not data:
-            data = self.data
-
-        if data.get('mode_list'):
-            self.mode_switch = {}
-            unique_mode_urls = list(set(sum(list(data['mode_list'].values()), [])))
-            self.workmodes = self.get_workmodes(unique_mode_urls)
-
-        for mode_type in ['normal', 'extended']:
-            self.gen_mode_switch(mode_type)
-
-        return self.mode_switch
-
     def save(self, data: dict = None):
         """extended save method
 
@@ -152,10 +98,7 @@ class KonsoleConfig(DeviceConfigExtended):
             return super().save()
 
         try:
-            self.get_mode_switch(data)
-            data.update(menu=self.workmodes)
             data.update(assets=self.get_files(data))
-            self.logger.info(f'IN-MEM-MODE-SWITCH: {self.mode_switch}')
 
             try:
                 # oh, well, that's a crutch
