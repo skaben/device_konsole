@@ -2,6 +2,8 @@ import os
 import time
 import threading
 
+import subprocess
+
 from io import StringIO
 from contextlib import redirect_stdout
 from flask import jsonify
@@ -67,13 +69,12 @@ class KonsoleDevice(BaseDevice):
     def get_mode(self) -> dict:
         """get workmode for current alert state and terminal status (hacked|normal)"""
         result = {}
-<<<<<<< Updated upstream
         try:
             current_state = self.config.get("alert")
             mode_type = "extended" if self.config.get("hacked") else "normal"
             if not current_state:
                 raise Exception('no current state - blocking!')
-            mode_switch = self.config.get_mode_switch()
+            mode_switch = self.config.get("mode_switch", {})
             all_modes = self.config.get("menu", {})
             if mode_switch and all_modes:
                 current_switch = mode_switch.get(current_state)
@@ -87,34 +88,6 @@ class KonsoleDevice(BaseDevice):
             self.state_update({'blocked': True})
         finally:
             return result
-=======
-        current_state = self.config.get("alert")
-        all_modes = self.config.get("mode_list")
-        mode_switch = self.config.get("mode_switch")
-
-        if not current_state:
-            # no current alert level, powering off
-            self.state_update({"powered": False})
-            return result
-
-        if not all_modes or not mode_switch:
-            # no work modes configured for terminal
-            self.state_update({"blocked": True})
-            return result
-
-        mode_type = "extended" if self.config.get("hacked") else "normal"
-
-        if mode_switch:
-            current_switch = mode_switch.get(current_state)
-            mode_uuid = current_switch.get(mode_type)
-            if current_switch and mode_uuid:
-                result = all_modes.get(mode_uuid, {})
-            else:
-                # block if no current mode exists
-                self.state_update({'blocked': True})
-
-        return result
->>>>>>> Stashed changes
 
     def api_menu(self):
         self.logger.debug('MENU requested')
@@ -198,6 +171,9 @@ class KonsoleDevice(BaseDevice):
                               daemon=True)
         ft.start()
 
+    def start_kiosk(self):
+        subprocess.run(["firefox", "--kiosk", "http://127.0.0.1:5000", "--fullscreen"])
+
     def run(self):
         """device run routine"""
         super().run()
@@ -210,5 +186,7 @@ class KonsoleDevice(BaseDevice):
                 if self.headless:
                     while self.running:
                         time.sleep(100)
-        except Exception:
+                else:
+                    self.start_kiosk()
+        except Exception as e:
             raise
