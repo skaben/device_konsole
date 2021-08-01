@@ -10,9 +10,12 @@
 # asset_root: 'required asset types supported'
 
 iface: ${iface}
+topic: terminal
+broker_ip: 127.0.0.1
 headless: false
 standalone: false
-broker_ip: 127.0.0.1
+debug: true
+fullscreen: false
 username:
 password:
 asset_root: "./assets"
