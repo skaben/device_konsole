@@ -2,7 +2,7 @@
 DIST ?= dist.tar.gz
 DIST_PATH ?= home/runner/work/device_konsole_front/device_konsole_front/app/dist
 FRONTEND_BUILD_LATEST ?= https://github.com/skaben/device_konsole_front/raw/build/${DIST}
-VENV ?= ~/skaben-term-venv
+VENV ?= /home/wowa/venv
 
 
 
@@ -36,7 +36,7 @@ config:
 
 .PHONY: run
 run:
-	@. ${VENV}/bin/activate
+	@sh ${VENV}/bin/activate
 	@python3.7 app.py
 
 .PHONY: clean

@@ -102,8 +102,22 @@ class KonsoleConfig(DeviceConfigExtended):
                 continue
             states = [f'{_id}' for _id in content.get('state')]
             for state_id in states:
-                payload = {state_id: {uid: mode_type}}
+                payload = {state_id: {mode_type: uid}}
                 self._update_nested(self.mode_switch, payload)
+        return self.mode_switch
+
+    def get_mode_switch(self, data = None):
+        if not data:
+            data = self.data
+
+        if data.get('mode_list'):
+            self.mode_switch = {}
+            unique_mode_urls = list(set(sum(list(data['mode_list'].values()), [])))
+            self.workmodes = self.get_workmodes(unique_mode_urls)
+
+        for mode_type in ['normal', 'extended']:
+            self.gen_mode_switch(mode_type)
+
         return self.mode_switch
 
     def save(self, data: dict = None):
@@ -137,24 +151,11 @@ class KonsoleConfig(DeviceConfigExtended):
         if not data:
             return super().save()
 
-        self.logger.error(f'{data}')
-
         try:
-            if data.get('mode_list'):
-                # resetting mode_switch
-                self.mode_switch = {}
-                unique_mode_urls = list(set(sum(list(data['mode_list'].values()), [])))
-                self.workmodes = self.get_workmodes(unique_mode_urls)
-
-                # data.update(FORCE=True)
-                for mode_type in ['normal', 'extended']:
-                    # fixme: forced should be optional
-                    self.gen_mode_switch(mode_type)
-
-                data.update(menu=self.workmodes)
-
+            self.get_mode_switch(data)
+            data.update(menu=self.workmodes)
             data.update(assets=self.get_files(data))
-            self.logger.info(f'{self.mode_switch}')
+            self.logger.info(f'IN-MEM-MODE-SWITCH: {self.mode_switch}')
 
             try:
                 # oh, well, that's a crutch

@@ -30,8 +30,8 @@ class KonsoleDevice(BaseDevice):
 
     pages = {
         "load": "load",
-        "menu": "menu",
-        "hack": "hack"
+        "hack": "hack",
+        "main": "main"
     }
 
     cmd_test = "cmd_test"
@@ -69,18 +69,25 @@ class KonsoleDevice(BaseDevice):
     def get_mode(self) -> dict:
         """get workmode for current alert state and terminal status (hacked|normal)"""
         result = {}
-        current_state = self.config.get("alert", "1")
-        mode_type = "extended" if self.config.get("hacked") else "normal"
-        mode_switch = self.config.get("mode_switch")
-        all_modes = self.config.get("menu", {})
-        if mode_switch:
-            current_switch = mode_switch.get(current_state)
-            if current_switch:
-                result = all_modes.get(current_switch.get(mode_type, "1"), {})
-            else:
-                # block if no current mode exists
-                self.state_update({'blocked': True})
-        return result
+        try:
+            current_state = self.config.get("alert")
+            mode_type = "extended" if self.config.get("hacked") else "normal"
+            if not current_state:
+                raise Exception('no current state - blocking!')
+            mode_switch = self.config.get_mode_switch()
+            all_modes = self.config.get("menu", {})
+            if mode_switch and all_modes:
+                current_switch = mode_switch.get(current_state)
+                if current_switch:
+                    mode_id = current_switch.get(mode_type)
+                    result = all_modes.get(mode_id)
+                else:
+                    raise Exception('blocking')
+        except Exception:
+            self.logger.exception('while getting mode: ')
+            self.state_update({'blocked': True})
+        finally:
+            return result
 
     def api_menu(self):
         self.logger.debug('MENU requested')
@@ -99,7 +106,6 @@ class KonsoleDevice(BaseDevice):
             "powered": self.config.get("powered", True),
             "timeout": self.config.get("timeout", 0)
         }
-        self.logger.debug(data)
         return jsonify(data)
 
     def api_hack(self):
