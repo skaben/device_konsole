@@ -1,3 +1,4 @@
+from typing import List
 from skabenclient.config import DeviceConfigExtended
 
 ESSENTIAL = {
@@ -8,39 +9,82 @@ ESSENTIAL = {
 
 class KonsoleConfig(DeviceConfigExtended):
 
+    menu: List[dict] = []
+    SUPPORTED_NOT_FILES = [
+        'game',
+        'user',
+    ]
+    SUPPORTED_IS_FILES = [
+        'audio',
+        'video',
+        'image',
+        'text'
+    ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.SUPPORTED = self.SUPPORTED_IS_FILES + self.SUPPORTED_NOT_FILES
 
-    def parse_item_data(self, menu_item):
-        (item_type, item_hash) = list(menu_item.items())[0]
-        if item_type == 'game':
-            data = self.parse_game_item(menu_item)
-        elif item_type == 'text':
-            data = self.parse_text_item(item_hash)
-        else:
-            data = self.parse_file_item(item_hash)
+    def get_mode(self):
+        """get workmode for current alert state and terminal status (hacked|normal)"""
+        try:
+            current_state = self.get("alert")
+            mode_type = "extended" if self.get("hacked") else "normal"
 
-        return {
-            'type': item_type,
-            'data': data,
-            'name': f'{item_type} document'
-        }
+            if not current_state:
+               raise Exception('no current state - blocking!')
+
+            mode_switch = self.get("mode_switch", {})
+            all_modes = self.get("mode_list", {})
+            if mode_switch and all_modes:
+                current_switch = mode_switch.get(current_state)
+                if current_switch:
+                    mode_id = current_switch.get(mode_type)
+                    return all_modes.get(mode_id, {})
+                else:
+                    raise Exception('blocking')
+        except Exception:
+            raise
+
+    def parse_menu(self, workmode: dict) -> list:
+        result = []
+
+        for item in workmode.get('menu_set', []):
+            item_type = ''
+            for _type in self.SUPPORTED:
+                if _type in item.keys():
+                    item_type = _type
+            if not item_type:
+                continue
+
+            content = item.get(item_type)
+            if item_type == 'text':
+                item_content = self.parse_text_item(content)
+            elif item_type in self.SUPPORTED_IS_FILES:
+                item_content = self.parse_file_item(content)
+            else:
+                item_content = content
+            result.append({
+                'name': item.get('name'),
+                'type': item_type,
+                'data': item_content,
+                'timer': item.get('timer', -1)
+            })
+        return result
 
     def get_local_path(self, item_hash):
-        if not self.data.get('assets'):
+        assets = self.get('assets')
+        if not assets:
             self.logger.error('no assets!')
             return
 
-        item = self.data['assets'].get(item_hash, {})
-        item_path = item.get('local_path', None)
+        item = assets.get(item_hash, {})
+        item_path = item.get('local_path')
         if not item_path:
             self.logger.error(f'no `local_path` found for {item}')
             return
 
         return item_path
-
-    def parse_game_item(self, item):
-        return item.get('game')
 
     def parse_text_item(self, item_hash: str):
         item_path = self.get_local_path(item_hash)
@@ -67,37 +111,12 @@ class KonsoleConfig(DeviceConfigExtended):
         return self.get_files_async(files)
 
     def save(self, data: dict = None):
-        """extended save method
-
-           parse terminal work modes (menu sets) and attached files
-           typical config looks like:
-
-           {
-                'file_list': {
-                    '1620381838-nvuEWpoF': 'http://127.0.0.1/media/text/документ.txt'
-                },
-                'mode_list': {
-                    'normal': [
-                        'http://127.0.0.1/api/workmode/1'
-                    ],
-                    'extended': [
-                        'http://127.0.0.1/api/workmode/1'
-                    ]
-                },
-                    'alert': '2',
-                    'uid': '080027cf78c2',
-                    'timestamp': 1620469674,
-                    'powered': True,
-                    'blocked': True,
-                    'hacked': False
-                }
-           }
-
-        """
+        """extended save method"""
         if not data:
             return super().save()
 
         try:
+            # todo: сделать обработку ошибки загрузки файлов, сейчас оно встает раком просто так само
             data.update(assets=self.get_files(data))
 
             try:
@@ -109,4 +128,5 @@ class KonsoleConfig(DeviceConfigExtended):
                 raise
             super().save(payload=data)
         except Exception:
+            logging.exception('while saving device config')
             raise

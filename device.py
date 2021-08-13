@@ -30,7 +30,7 @@ class KonsoleDevice(BaseDevice):
     ws_path = "ws"
 
     pages = {
-        "load": "load",
+        "menu": "menu",
         "hack": "hack",
         "main": "main"
     }
@@ -62,27 +62,24 @@ class KonsoleDevice(BaseDevice):
         self.socketio.on_event("gamewin", self.game_win)
         self.socketio.on_event("gamelose", self.game_lose)
         self.socketio.on_event("unblock", self.unblock)
-        #self.socketio.on_event("fetch", self.api_data)
+        self.socketio.on_event("block", self.block)
+        self.socketio.on_event("user-input", self.user_input)
         self.socketio.on_event("testws", self.testws)
         return self.socketio
+
+    def user_input(self, payload):
+        self.logger.info(f'received user input: {payload}')
+        if payload.get('success'):
+            payload.update(message="input success")
+            self.send_message(payload)
+        else:
+            self.send_message({"message": "access denied"})
 
     def get_mode(self) -> dict:
         """get workmode for current alert state and terminal status (hacked|normal)"""
         result = {}
         try:
-            current_state = self.config.get("alert")
-            mode_type = "extended" if self.config.get("hacked") else "normal"
-            if not current_state:
-                raise Exception('no current state - blocking!')
-            mode_switch = self.config.get("mode_switch", {})
-            all_modes = self.config.get("menu", {})
-            if mode_switch and all_modes:
-                current_switch = mode_switch.get(current_state)
-                if current_switch:
-                    mode_id = current_switch.get(mode_type)
-                    result = all_modes.get(mode_id)
-                else:
-                    raise Exception('blocking')
+            result = self.config.get_mode()
         except Exception:
             self.logger.exception('while getting mode: ')
             self.state_update({'blocked': True})
@@ -91,13 +88,11 @@ class KonsoleDevice(BaseDevice):
 
     def api_menu(self):
         self.logger.debug('MENU requested')
-        mode = self.get_mode()
-        data = mode.get("menu_set")
-        self.logger.debug(f'MODE: {mode}')
-        return jsonify(data or {})
+        mode_data = self.config.parse_menu(self.get_mode())
+        self.logger.debug(f'MODE: {mode_data}')
+        return jsonify(mode_data or [])
 
     def api_main(self):
-        self.logger.debug('MAIN requested')
         mode = self.get_mode()
         data = {
             "header": mode.get("header"),
@@ -110,26 +105,25 @@ class KonsoleDevice(BaseDevice):
 
     def api_hack(self):
         self.logger.info('GAME requested')
-        game_data = [data for data in self.get_mode().get('menu_set')
-                     if isinstance(data, dict) and data.get('type') == 'game']
-
-        if game_data:
-            data = game_data[0]
-            hack = data.get('data')
-            # word_dir = os.path.join(self.resources_dir, 'wordsets', self.wordset_type)
+        result = {}
+        mode_data = self.config.parse_menu(self.get_mode())
+        data = [i for i in mode_data if i.get('type') == 'game'] or ['',]
+        conf = data[0]
+        if conf:
+            game_conf = conf.get('data')
             word_dir = os.path.join(self.config.system.root, 'resources', 'wordsets', self.wordset_type)
-            word_gen = WordGen(word_dir, hack['wordcount'], hack['difficulty'])
+            word_gen = WordGen(word_dir, game_conf['wordcount'], game_conf['difficulty'])
             result = {
                 "words": word_gen.words,
                 "password": word_gen.password,
-                "tries": hack['attempts'],
-                "timeout": data['timer'],
-                "chance": hack['chance'],
-                "header": 'процедура эскалации запущена',
+                "tries": game_conf['attempts'],
+                "timeout": conf['timer'],
+                "chance": game_conf['chance'],
+                "header": f'процедура `{conf["name"]}` запущена',
                 "footer": 'доступ без авторизации строго воспрещен'
             }
-            self.logger.debug(result)
-            return jsonify(result)
+            self.logger.info(result)
+        return jsonify(result)
 
     def testws(self):
         self.logger.info("receive test, reply with full config")
@@ -144,6 +138,11 @@ class KonsoleDevice(BaseDevice):
         self.logger.info("[!] terminal game not solved")
         self.state_update({"blocked": True})
         self.send_message({"message": "access denied"})
+        self.switch_page("main")
+
+    def block(self):
+        self.logger.debug('blocking...')
+        self.state_update({"blocked": True})
         self.switch_page("main")
 
     def unblock(self):
@@ -172,6 +171,7 @@ class KonsoleDevice(BaseDevice):
         ft.start()
 
     def start_kiosk(self):
+        subprocess.run(["killall", "firefox"])
         subprocess.run(["firefox", "--kiosk", "http://127.0.0.1:5000", "--fullscreen"])
 
     def run(self):
