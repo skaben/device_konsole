@@ -1,7 +1,8 @@
 import os
 import time
-import webview
 import threading
+
+import subprocess
 
 from io import StringIO
 from contextlib import redirect_stdout
@@ -29,9 +30,9 @@ class KonsoleDevice(BaseDevice):
     ws_path = "ws"
 
     pages = {
-        "load": "load",
         "menu": "menu",
-        "hack": "hack"
+        "hack": "hack",
+        "main": "main"
     }
 
     cmd_test = "cmd_test"
@@ -46,7 +47,6 @@ class KonsoleDevice(BaseDevice):
         self.running = None
         self.headless = system_config.get("headless")
         self.host = system_config.get("host", "http://127.0.0.1:5000/")
-        self.gui = system_config.get("gui", "qt")
         self.resolution = system_config.get("resolution", (1024, 768))
         self.fullscreen = system_config.get("fullscreen", False)
         self.resources_dir = os.path.join(system_config.root,
@@ -62,35 +62,37 @@ class KonsoleDevice(BaseDevice):
         self.socketio.on_event("gamewin", self.game_win)
         self.socketio.on_event("gamelose", self.game_lose)
         self.socketio.on_event("unblock", self.unblock)
-        #self.socketio.on_event("fetch", self.api_data)
+        self.socketio.on_event("block", self.block)
+        self.socketio.on_event("user-input", self.user_input)
         self.socketio.on_event("testws", self.testws)
         return self.socketio
+
+    def user_input(self, payload):
+        self.logger.info(f'received user input: {payload}')
+        if payload.get('success'):
+            payload.update(message="input success")
+            self.send_message(payload)
+        else:
+            self.send_message({"message": "access denied"})
 
     def get_mode(self) -> dict:
         """get workmode for current alert state and terminal status (hacked|normal)"""
         result = {}
-        current_state = self.config.get("alert", "1")
-        mode_type = "extended" if self.config.get("hacked") else "normal"
-        mode_switch = self.config.get("mode_switch")
-        all_modes = self.config.get("menu", {})
-        if mode_switch:
-            current_switch = mode_switch.get(current_state)
-            if current_switch:
-                result = all_modes.get(current_switch.get(mode_type, "1"), {})
-            else:
-                # block if no current mode exists
-                self.state_update({'blocked': True})
-        return result
+        try:
+            result = self.config.get_mode()
+        except Exception:
+            self.logger.exception('while getting mode: ')
+            self.state_update({'blocked': True})
+        finally:
+            return result
 
     def api_menu(self):
         self.logger.debug('MENU requested')
-        mode = self.get_mode()
-        data = mode.get("menu_set")
-        self.logger.debug(f'MODE: {mode}')
-        return jsonify(data or {})
+        mode_data = self.config.parse_menu(self.get_mode())
+        self.logger.debug(f'MODE: {mode_data}')
+        return jsonify(mode_data or [])
 
     def api_main(self):
-        self.logger.debug('MAIN requested')
         mode = self.get_mode()
         data = {
             "header": mode.get("header"),
@@ -99,31 +101,29 @@ class KonsoleDevice(BaseDevice):
             "powered": self.config.get("powered", True),
             "timeout": self.config.get("timeout", 0)
         }
-        self.logger.debug(data)
         return jsonify(data)
 
     def api_hack(self):
         self.logger.info('GAME requested')
-        game_data = [data for data in self.get_mode().get('menu_set')
-                     if isinstance(data, dict) and data.get('type') == 'game']
-
-        if game_data:
-            data = game_data[0]
-            hack = data.get('data')
-            # word_dir = os.path.join(self.resources_dir, 'wordsets', self.wordset_type)
+        result = {}
+        mode_data = self.config.parse_menu(self.get_mode())
+        data = [i for i in mode_data if i.get('type') == 'game'] or ['',]
+        conf = data[0]
+        if conf:
+            game_conf = conf.get('data')
             word_dir = os.path.join(self.config.system.root, 'resources', 'wordsets', self.wordset_type)
-            word_gen = WordGen(word_dir, hack['wordcount'], hack['difficulty'])
+            word_gen = WordGen(word_dir, game_conf['wordcount'], game_conf['difficulty'])
             result = {
                 "words": word_gen.words,
                 "password": word_gen.password,
-                "tries": hack['attempts'],
-                "timeout": data['timer'],
-                "chance": hack['chance'],
-                "header": 'процедура эскалации запущена',
+                "tries": game_conf['attempts'],
+                "timeout": conf['timer'],
+                "chance": game_conf['chance'],
+                "header": f'процедура `{conf["name"]}` запущена',
                 "footer": 'доступ без авторизации строго воспрещен'
             }
-            self.logger.debug(result)
-            return jsonify(result)
+            self.logger.info(result)
+        return jsonify(result)
 
     def testws(self):
         self.logger.info("receive test, reply with full config")
@@ -138,6 +138,11 @@ class KonsoleDevice(BaseDevice):
         self.logger.info("[!] terminal game not solved")
         self.state_update({"blocked": True})
         self.send_message({"message": "access denied"})
+        self.switch_page("main")
+
+    def block(self):
+        self.logger.debug('blocking...')
+        self.state_update({"blocked": True})
         self.switch_page("main")
 
     def unblock(self):
@@ -165,17 +170,9 @@ class KonsoleDevice(BaseDevice):
                               daemon=True)
         ft.start()
 
-    def start_webclient(self):
-        """start pywebview web-client in main thread"""
-        (width, height) = self.resolution
-        webview.create_window(
-            "TERMINAL",
-            self.host,
-            fullscreen=self.fullscreen,
-            width=width,
-            height=height
-        )
-        webview.start(gui=self.gui)
+    def start_kiosk(self):
+        subprocess.run(["killall", "firefox"])
+        subprocess.run(["firefox", "--kiosk", "http://127.0.0.1:5000", "--fullscreen"])
 
     def run(self):
         """device run routine"""
@@ -186,10 +183,10 @@ class KonsoleDevice(BaseDevice):
             stream = StringIO()
             with redirect_stdout(stream):
                 self.start_webserver()
-                if not self.headless:
-                    self.start_webclient()
-                else:
+                if self.headless:
                     while self.running:
                         time.sleep(100)
-        except Exception:
+                else:
+                    self.start_kiosk()
+        except Exception as e:
             raise

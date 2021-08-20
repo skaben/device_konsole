@@ -23,13 +23,9 @@ pyaml==18.11.0
 pycodestyle==2.6.0
 pyflakes==2.2.0
 pygame==1.9.6
-PyQt5==5.15.1
-PyQt5-sip==12.8.1
-PyQtWebEngine==5.15.1
 python-dotenv==0.14.0
 python-engineio==3.13.2
 python-socketio==4.6.0
-pywebview==3.3.5
 PyYAML==5.3.1
 requests==2.25.1
 six==1.15.0

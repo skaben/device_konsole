@@ -1,4 +1,5 @@
 import os
+import queue
 
 from flask import Flask, render_template, request, send_from_directory, jsonify
 from flask_cors import CORS, cross_origin
@@ -34,6 +35,18 @@ app.add_url_rule('/assets/texts/<path:path>', view_func=serve.send_asset_text)
 app.add_url_rule('/assets/sounds/<path:path>', view_func=serve.send_asset_sound)
 app.add_url_rule('/assets/images/<path:path>', view_func=serve.send_asset_image)
 app.add_url_rule('/assets/videos/<path:path>', view_func=serve.send_asset_video)
+
+
+@app.route('/event-source', methods=['GET'])
+def listen():
+
+    def stream():
+        messages = announcer.listen()  # returns a queue.Queue
+        while True:
+            msg = messages.get()  # blocks until a new message arrives
+            yield msg
+
+    return flask.Response(stream(), mimetype='text/event-stream')
 
 
 @app.errorhandler(404)

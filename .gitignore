@@ -3,6 +3,7 @@
 .env
 timestamp
 *.log
+*.log.*
 conf/*
 .idea/
 node_modules/
