@@ -13,7 +13,7 @@ RESET := $(shell tput init)
 
 .PHONY: install  
 install:  ##  установить зависимости
-	@sudo apt install -y --no-install-recommends libsdl2-dev\
+	@sudo apt install -y --no-install-recommends python3.7 python3.7-venv libsdl2-dev\
    libsdl2-image-dev libsdl2-mixer-dev wget libglu1-mesa-dev mesa-common-dev build-essential \
    libfontconfig1 qt5-default python3-testresources
 	@python3.7 -m venv ${VENV}
@@ -31,7 +31,6 @@ front:  ##  скачать фронтенд
 
 .PHONY: config  
 config:  ##  создать конфиг по умолчанию
-	@make clean
 	@mkdir conf resources
 	@chmod +x ./templates/make-conf.sh
 	@sh ./templates/make-conf.sh
@@ -46,8 +45,9 @@ run:  ##  запуск терминалаv
 clean:  ##  очистить конфиг и ресурсы
 	@rm -rf ./conf
 	@rm -rf ./resources	
-	@rm -rf ${VENV}
 
+.PHONY: init
+init:  clean config front  ##  полная инициализация с нуля
 
 help:
 	@echo "\nКоманды:\n"
