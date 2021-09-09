@@ -64,16 +64,22 @@ class KonsoleDevice(BaseDevice):
         self.socketio.on_event("unblock", self.unblock)
         self.socketio.on_event("block", self.block)
         self.socketio.on_event("user-input", self.user_input)
-        self.socketio.on_event("testws", self.testws)
+        self.socketio.on_event("console", self.send_console)
         return self.socketio
+
+    def send_console(self, payload):
+        self.send_message({
+            "type": "console",
+            "content": payload.get("message")
+        })
 
     def user_input(self, payload):
         self.logger.info(f'received user input: {payload}')
-        if payload.get('success'):
-            payload.update(message="input success")
-            self.send_message(payload)
-        else:
-            self.send_message({"message": "access denied"})
+        self.send_message({
+            "type": "input",
+            "content": payload.get("action"),
+            "success": payload.get("success")
+        })
 
     def get_mode(self) -> dict:
         """get workmode for current alert state and terminal status (hacked|normal)"""
@@ -99,7 +105,9 @@ class KonsoleDevice(BaseDevice):
             "footer": mode.get("footer"),
             "blocked": self.config.get("blocked", False),
             "powered": self.config.get("powered", True),
-            "timeout": self.config.get("timeout", 0)
+            "timeout": self.config.get("timeout", 0),
+            "alert": self.config.get("alert"),
+            'shape': mode.get('shape')
         }
         return jsonify(data)
 
@@ -137,7 +145,10 @@ class KonsoleDevice(BaseDevice):
     def game_lose(self):
         self.logger.info("[!] terminal game not solved")
         self.state_update({"blocked": True})
-        self.send_message({"message": "access denied"})
+        self.send_message({
+            "type": "hack",
+            "success": False
+        })
         self.switch_page("main")
 
     def block(self):

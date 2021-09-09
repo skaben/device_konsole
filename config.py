@@ -65,7 +65,7 @@ class KonsoleConfig(DeviceConfigExtended):
             else:
                 item_content = content
             result.append({
-                'name': item.get('name'),
+                'display': item.get('display'),
                 'type': item_type,
                 'data': item_content,
                 'timer': item.get('timer', -1)
