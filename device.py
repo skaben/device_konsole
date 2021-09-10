@@ -49,6 +49,7 @@ class KonsoleDevice(BaseDevice):
         self.host = system_config.get("host", "http://127.0.0.1:5000/")
         self.resolution = system_config.get("resolution", (1024, 768))
         self.fullscreen = system_config.get("fullscreen", False)
+        self.is_master = system_config.get("is_master")
         self.resources_dir = os.path.join(system_config.root,
                                           system_config.get('asset_root'))
         self.init_socketio()
@@ -68,9 +69,13 @@ class KonsoleDevice(BaseDevice):
         return self.socketio
 
     def send_console(self, payload):
+        message = payload.get("message")
+        if self.is_master and message:
+            message = message.upper()
         self.send_message({
             "type": "console",
-            "content": payload.get("message")
+            "response": self.is_master,
+            "content": message
         })
 
     def user_input(self, payload):
