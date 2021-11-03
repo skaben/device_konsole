@@ -107,8 +107,8 @@ class KonsoleConfig(DeviceConfigExtended):
         if not data.get('file_list'):
             return {}
 
-        files = self.parse_files(data.pop('file_list')).values()
-        return self.get_files_async(files)
+        files = list(self.parse_files(data.pop('file_list')).values())
+        return self.get_files_sync(files)
 
     def save(self, data: dict = None):
         """extended save method"""
